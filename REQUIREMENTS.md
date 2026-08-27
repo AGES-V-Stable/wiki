@@ -164,7 +164,7 @@ Para consultar e acompanhar as atividades realizadas na conta da empresa.*
 
 ## Conta
 
-### US023 — Acessar conta administrativa
+### US001 — Acessar conta administrativa
 
 *Como Administrador,
 Quero acessar a minha conta administrativa,
@@ -172,13 +172,13 @@ Para acessar as funcionalidades de gestão e acompanhamento da plataforma.*
 
 ## Clientes PME
 
-### US024 — Visualizar clientes PME
+### US002 — Visualizar clientes PME
 
 *Como Administrador,
 Quero visualizar os clientes PME cadastrados,
 Para acompanhar as empresas que utilizam a plataforma.*
 
-### US025 — Gerenciar clientes PME
+### US003 — Gerenciar clientes PME
 
 *Como Administrador,
 Quero gerenciar os clientes PME,
@@ -186,13 +186,13 @@ Para manter atualizadas as informações das empresas cadastradas na plataforma.
 
 ## Beneficiários
 
-### US026 — Visualizar beneficiários
+### US004 — Visualizar beneficiários
 
 *Como Administrador,
 Quero visualizar os beneficiários cadastrados,
 Para acompanhar as contrapartes utilizadas nas operações internacionais.*
 
-### US027 — Gerenciar beneficiários
+### US005 — Gerenciar beneficiários
 
 *Como Administrador,
 Quero gerenciar os beneficiários cadastrados,
@@ -200,43 +200,43 @@ Para manter atualizadas as informações das contrapartes utilizadas nas operaç
 
 ## Dashboard
 
-### US028 — Visualizar economia total acumulada
+### US006 — Visualizar economia total acumulada
 
 *Como Administrador,
 Quero visualizar a economia total acumulada,
 Para acompanhar os benefícios gerados pelas operações realizadas na plataforma.*
 
-### US029 — Visualizar volume total transacionado
+### US007 — Visualizar volume total transacionado
 
 *Como Administrador,
 Quero visualizar o volume total transacionado,
 Para acompanhar o volume agregado das operações realizadas pelas PMEs.*
 
-### US030 — Visualizar câmbio atual
+### US008 — Visualizar câmbio atual
 
 *Como Administrador,
 Quero visualizar o câmbio atual,
 Para acompanhar a taxa de câmbio utilizada nas operações.*
 
-### US031 — Visualizar histórico de volume de remessas
+### US009 — Visualizar histórico de volume de remessas
 
 *Como Administrador,
 Quero visualizar o histórico de volume de remessas,
 Para acompanhar a evolução das operações realizadas pelas PMEs.*
 
-### US032 — Visualizar histórico de economia
+### US010 — Visualizar histórico de economia
 
 *Como Administrador,
 Quero visualizar o histórico de economia,
 Para acompanhar a evolução dos benefícios gerados pelas operações realizadas pelas PMEs.*
 
-### US033 — Visualizar últimas transferências
+### US011 — Visualizar últimas transferências
 
 *Como Administrador,
 Quero visualizar as últimas transferências,
 Para acompanhar as operações mais recentes realizadas pelas PMEs.*
 
-### US034 — Filtrar dados
+### US012 — Filtrar dados
 
 *Como Administrador,
 Quero filtrar os dados apresentados na plataforma,
@@ -244,31 +244,31 @@ Para encontrar as informações relevantes para minha análise.*
 
 ## Nice to Have
 
-### US035 — Cadastrar administradores
+### US013 — Cadastrar administradores
 
 *Como Administrador,
 Quero cadastrar administradores,
 Para permitir o acesso de usuários autorizados às funcionalidades administrativas da plataforma.*
 
-### US036 — Gerenciar administradores
+### US014 — Gerenciar administradores
 
 *Como Administrador,
 Quero gerenciar os administradores cadastrados,
 Para manter atualizada a relação de usuários com acesso administrativo.*
 
-### US037 — Cadastrar cliente PME
+### US015 — Cadastrar cliente PME
 
 *Como Administrador,
 Quero cadastrar um cliente PME,
 Para incluir uma empresa na plataforma.*
 
-### US038 — Cadastrar beneficiários
+### US016 — Cadastrar beneficiários
 
 *Como Administrador,
 Quero cadastrar beneficiários,
 Para disponibilizar contrapartes para utilização nas operações internacionais.*
 
-### US039 — Gerar relatórios de auditoria
+### US017 — Gerar relatórios de auditoria
 
 *Como Administrador,
 Quero gerar relatórios de auditoria,
