@@ -1,5 +1,6 @@
 # Índice
 
+* [Geral](#geral)
 * [Painel Cliente PME](#painel-cliente-pme)
 
   * [Conta](#conta)
@@ -16,14 +17,24 @@
   * [Dashboard](#dashboard-1)
   * [Nice to Have](#nice-to-have-1)
 
+# Geral
+
+## Usuário
+
+### US001 — Acessar conta
+
+*Como usuário,
+Quero acessar a minha conta,
+Para utilizar a plataforma de pagamentos internacionais.*
+
 # Painel Cliente PME
 
 ## Conta
 
-### US001 — Acessar conta PME
+### US001 — Cadastrar conta PME
 
-*Como Cliente PME,
-Quero acessar a minha conta,
+*Como cliente,
+Quero cadastrar minha PME,
 Para utilizar a plataforma de pagamentos internacionais.*
 
 ### US002 — Verificar situação cadastral da conta PME
@@ -161,14 +172,6 @@ Quero gerar relatórios de auditoria,
 Para consultar e acompanhar as atividades realizadas na conta da empresa.*
 
 # Painel Administrativo
-
-## Conta
-
-### US001 — Acessar conta administrativa
-
-*Como Administrador,
-Quero acessar a minha conta administrativa,
-Para acessar as funcionalidades de gestão e acompanhamento da plataforma.*
 
 ## Clientes PME
 
