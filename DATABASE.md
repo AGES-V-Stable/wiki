@@ -9,6 +9,12 @@
   <em>Modelo Lógico de Dados</em>
 </div>
 
+<div align="center">
+  <img width="1084" height="666" alt="ER Diagram0" src="https://github.com/user-attachments/assets/2ea951f3-0362-4cc1-8d0a-fe2e2d40e271" />
+  <br/>
+  <em>Modelo Conceitual</em>
+</div>
+
 <h3>Padrões Adotados</h3>
 <ul>
   <li><strong>Identificadores:</strong> Utilização de <code>UUID v4</code> nativo para todas as chaves primárias (PK), garantindo segurança e impossibilitando a enumeração de registros em rotas públicas.</li>
