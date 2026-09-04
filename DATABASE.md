@@ -1,6 +1,9 @@
+
 Documentação do Banco de Dados: V-Stable
 Visão Geral da Arquitetura
 O banco de dados da V-Stable foi modelado em PostgreSQL.
+<img width="1811" height="1452" alt="modelagem_logica_vstable" src="https://github.com/user-attachments/assets/1e474744-2310-4457-af00-7dd8ff5db672" />
+Modelo Lógico.
 
 Padrões Adotados:
 
