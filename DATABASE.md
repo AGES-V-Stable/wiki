@@ -4,7 +4,8 @@
 <p>O banco de dados da V-Stable foi modelado em <strong>PostgreSQL</strong>.</p>
 
 <div align="center">
-  <img width="100%" alt="modelagem_logica_vstable" src="https://github.com/user-attachments/assets/1e474744-2310-4457-af00-7dd8ff5db672" />
+  <img width="2071" height="1441" alt="diagrama-vstable-v8" src="https://github.com/user-attachments/assets/f8f55305-6896-42f6-bbcb-1fe6c3370913" />
+
   <br/>
   <em>Modelo Lógico de Dados</em>
 </div>
