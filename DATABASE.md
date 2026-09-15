@@ -1,83 +1,66 @@
-<h1>🗄️ Documentação do Banco de Dados: V-Stable</h1>
+# Banco de Dados
 
-<h2>🏗️ Visão Geral da Arquitetura</h2>
-<p>O banco de dados da V-Stable foi modelado em <strong>PostgreSQL</strong>.</p>
+O banco de dados da V-Stable é modelado em **PostgreSQL**, com o schema aplicado via **Flyway** (`src/main/resources/db/migration/V1__init.sql`).
+
+## Diagramas
 
 <div align="center">
-  <img width="100%" alt="modelagem_logica_vstable" src="https://github.com/user-attachments/assets/1e474744-2310-4457-af00-7dd8ff5db672" />
+<img width="2071" height="1441" alt="diagrama-vstable-v8" src="https://github.com/user-attachments/assets/8b28666d-ae61-4e90-897b-682d67fab54b" />
   <br/>
   <em>Modelo Lógico de Dados</em>
 </div>
 
 <div align="center">
-  <img width="1084" height="666" alt="ER Diagram0" src="https://github.com/user-attachments/assets/2ea951f3-0362-4cc1-8d0a-fe2e2d40e271" />
+<img width="1084" height="666" alt="ER Diagram0" src="https://github.com/user-attachments/assets/9db506f7-044a-4a1a-aa96-d85a17fd9d9e" />
   <br/>
   <em>Modelo Conceitual</em>
 </div>
 
-<h3>Padrões Adotados</h3>
-<ul>
-  <li><strong>Identificadores:</strong> Utilização de <code>UUID v4</code> nativo para todas as chaves primárias (PK), garantindo segurança e impossibilitando a enumeração de registros em rotas públicas.</li>
-  <li><strong>Padronização via ENUMs:</strong> Controle rígido de estados (Status de Transação, Compliance, Etapas de Onboarding, Métodos de Transferência e Redes Blockchain) diretamente no motor do banco.</li>
-  <li><strong>Herança 1-para-1 (Table-per-Type):</strong> Separação elegante do fluxo de transações. Os dados financeiros comuns ficam na tabela <code>transacoes_base</code>, enquanto campos específicos de envio (Importação) e recebimento (Exportação/Invoice) ficam em tabelas filhas, garantindo a normalização e eliminando colunas vazias.</li>
-</ul>
+## Padrões Adotados
 
-<hr>
+- **Identificadores:** `UUID v4` nativo em todas as chaves primárias (PK), garantindo segurança e impossibilitando a enumeração de registros em rotas públicas.
+- **Padronização via ENUMs:** controle rígido de estados (Status de Transação, Compliance, Métodos de Transferência e Redes Blockchain) diretamente no motor do banco.
+- **Herança 1-para-1 (Table-per-Type):** os dados financeiros comuns ficam em `base_transactions`, enquanto campos específicos de envio (Importação) e recebimento (Exportação/Invoice) ficam em tabelas filhas, mantendo a normalização e evitando colunas vazias.
+- **Nomenclatura em inglês:** tabelas, colunas e tipos ENUM são nomeados em inglês. Os valores dos ENUMs e os campos das APIs continuam em português.
 
-<h2>📖 Dicionário de Tabelas</h2>
+## Dicionário de Tabelas
 
-<h3>1. Núcleo e Identidade (Core)</h3>
-<p><em>*Nota Arquitetural: Para otimização do fluxo de cadastro (MVP), as entidades de Empresa e Usuário nascem simultaneamente na primeira etapa do processo.</em></p>
-<ul>
-  <li><strong><code>empresas</code>:</strong> Tabela central do sistema. Armazena os dados cadastrais da PME, endereço, informações de compliance (propósito, receita) e o saldo disponível na plataforma.
-    <blockquote><strong>💡 Destaque:</strong> Possui controle de aprovação de compliance granularizado por moeda (<code>kyc_usd_aprovado</code> e <code>kyc_cop_aprovado</code>). Campos necessários devido a diferenças de compliance para realizar transações com Dólar e Peso Colombiano, entre outras.</blockquote>
-  </li>
-  <li><strong><code>usuarios</code>:</strong> Representantes legais que operam o painel da PME.
-    <blockquote><strong>💡 Destaque:</strong> Centraliza a segurança da conta (credenciais, status de atividade e <code>segredo_2fa</code> para validação TOTP no backend). Exige obrigatoriamente o vínculo com uma empresa (<code>empresa_id</code>).</blockquote>
-  </li>
-  <li><strong><code>administradores</code>:</strong> Usuários internos da V-Stable (staff). Tabela isolada das PMEs, com níveis de acesso definidos (<code>SUPER_ADMIN</code>, <code>ANALISTA_COMPLIANCE</code>, <code>SUPORTE</code>) e exigências rígidas de segurança (troca de senha obrigatória e 2FA).</li>
-</ul>
+### 1. Núcleo e Identidade
 
-<h3>2. Onboarding e Compliance</h3>
-<ul>
-  <li><strong><code>progresso_cadastros</code>:</strong> Tracker de navegação e pendências (Checklist). Como a conta oficial já existe desde o primeiro passo, esta tabela rastreia as etapas subsequentes que o usuário ainda precisa preencher.
-    <blockquote><strong>💡 Destaque:</strong> A arquitetura evoluiu e não utiliza mais JSONB temporário. Agora é vinculada via <code>usuario_id</code> e utiliza o campo <code>etapa_pendente</code> (via <code>etapa_pendente_enum</code>, ex: <code>DADOS_FINANCEIROS_EMPRESA</code>, <code>ENVIO_DOCUMENTOS_COMPLIANCE</code>). Isso orienta a API a bloquear o acesso à dashboard e renderizar no Frontend exatamente a tela que falta para a conclusão.</blockquote>
-  </li>
-  <li><strong><code>documentos_compliance</code>:</strong> Registro dos arquivos (Contrato Social, Comprovantes de Endereço, CNH) enviados para auditoria. Armazena a URL do bucket S3 e o status de aprovação de cada arquivo.</li>
-</ul>
+> O cadastro é feito em uma única chamada atômica (`POST /v1/cadastros/onboarding`) — as entidades de Empresa e Usuário nascem simultaneamente nessa chamada, junto com um registro pendente de verificação de KYC.
 
-<h3>3. Diretório Financeiro</h3>
-<ul>
-  <li><strong><code>beneficiarios</code>:</strong> Agenda de contatos unificada por PME. Suporta múltiplos destinos financeiros em um único registro.
-    <blockquote><strong>💡 Destaque:</strong> Registra identificadores da API parceira (<code>avenia_id</code> para contas fiduciárias e <code>avenia_wallet_id</code> para carteiras). Suporta contas bancárias tradicionais, PIX e redes Blockchain (Ethereum, Polygon, Tron, etc.), exigindo o preenchimento apenas dos dados correspondentes ao <code>tipo_recebimento</code>.</blockquote>
-  </li>
-</ul>
+**`companies`** — tabela central do sistema. Armazena os dados cadastrais da PME, endereço, informações de compliance (propósito, receita) e o saldo disponível na plataforma. Possui controle de aprovação de compliance granularizado por moeda (`kyc_usd_approved` e `kyc_cop_approved`), necessário pelas diferenças de compliance para transações em Dólar e Peso Colombiano, entre outras.
 
-<h3>4. Motor de Transações (Herança Table-per-Type)</h3>
-<ul>
-  <li><strong><code>transacoes_base</code>:</strong> Concentra o núcleo monetário de qualquer movimentação (seja entrada ou saída).
-    <blockquote><strong>💡 Destaque:</strong> Armazena a conversão exata da operação (<code>moeda_estrangeira</code>, <code>valor_estrangeiro</code>, <code>valor_liquidacao_brl</code>, <code>taxa_cambio</code>, <code>percentual_spread_efetivo</code>). Guarda o <code>avenia_ticket_id</code> para conciliação via Webhooks e o <code>hash_transacao_blockchain</code> para rastreabilidade on-chain.</blockquote>
-  </li>
-  <li><strong><code>transacoes_importacao</code>:</strong> Extensão da transação para fluxos de Saída (Pagamento de fornecedores).
-    <blockquote><strong>💡 Destaque:</strong> A chave primária é a própria FK (<code>transacao_id</code>). Exige o vínculo obrigatório e direto com a tabela de <code>beneficiarios</code> e a definição do <code>metodo_transferencia</code> (TED, PIX, BLOCKCHAIN, SALDO_EM_CONTA) que a PME usou para enviar os fundos.</blockquote>
-  </li>
-  <li><strong><code>transacoes_exportacao</code>:</strong> Extensão da transação para fluxos de Entrada (Geração de Invoices/Cobranças Internacionais).
-    <blockquote><strong>💡 Destaque:</strong> Totalmente desacoplada da tabela de beneficiários (já que o dinheiro entra). Armazena o link/código de pagamento único (<code>codigo_cobranca_externa</code>), os dados de contato do cliente internacional e a <code>data_vencimento</code> da fatura.</blockquote>
-  </li>
-</ul>
+**`users`** — representantes legais que operam o painel da PME. Centraliza a segurança da conta (`password_hash`/`password_salt`, status `active` e `two_factor_secret` para validação TOTP no backend). Exige obrigatoriamente o vínculo com uma empresa (`company_id`).
 
-<hr>
+**`administrators`** — usuários internos da V-Stable (staff). Tabela isolada das PMEs, com níveis de acesso definidos (`SUPER_ADMIN`, `ANALISTA_COMPLIANCE`, `SUPORTE`) e exigências rígidas de segurança (troca de senha obrigatória e 2FA).
 
-<h2>🛡️ Regras de Negócio e Integridade (<code>CHECK Constraints</code>)</h2>
-<p>Para blindar o banco de dados contra inconsistências lógicas vindas do backend, foram implementadas restrições nativas no PostgreSQL:</p>
+### 2. Onboarding e Compliance
 
-<h3>Isolamento Estrutural de Transações</h3>
-<p>Em vez de depender de validações frágeis em uma única tabela gigantesca, a própria divisão física em <code>transacoes_importacao</code> (exigindo Beneficiário) e <code>transacoes_exportacao</code> (exigindo Dados da Fatura) garante a integridade direcional da operação logo na modelagem, impedindo a inserção cruzada de dados.</p>
+**`avenia_kyc_verifications`** — registro da verificação de reconhecimento facial (Avenia). Criada automaticamente com `status = PENDENTE` ao final do onboarding, representando o próximo passo obrigatório (KYC facial) antes da liberação completa da conta.
 
-<h3>Consistência de Destinos Financeiros (<code>chk_dados_recebimento</code>)</h3>
-<p>Valida a completude dos dados na tabela <code>beneficiarios</code> com base no tipo escolhido na coluna <code>tipo_recebimento</code>:</p>
-<ul>
-  <li>🪙 <strong>Se <code>WALLET_CRYPTO</code>:</strong> Exige obrigatoriamente o endereço da carteira e a rede blockchain.</li>
-  <li>🇧🇷 <strong>Se <code>CHAVE_PIX</code>:</strong> Exige a chave Pix preenchida.</li>
-  <li>🏦 <strong>Se <code>CONTA_BANCARIA</code>:</strong> Exige o preenchimento de todo o formulário SWIFT/Local (documento de identificação, titular, código do banco, agência, conta e tipo de conta).</li>
-</ul>
+**`compliance_documents`** — registro dos arquivos (Contrato Social, Comprovantes de Endereço, Documento do Representante) enviados para auditoria. Armazena a URL do arquivo e o status de aprovação de cada um.
+
+### 3. Diretório Financeiro
+
+**`beneficiaries`** — agenda de contatos unificada por PME, suportando múltiplos destinos financeiros em um único registro. Registra identificadores da API parceira (`avenia_id` para contas fiduciárias e `avenia_wallet_id` para carteiras). Suporta contas bancárias tradicionais, PIX (`pix_key`) e redes Blockchain (Ethereum, Polygon, Tron, etc. via `blockchain_network`), conforme o `receiving_method` escolhido.
+
+### 4. Motor de Transações (Herança Table-per-Type)
+
+**`base_transactions`** — concentra o núcleo monetário de qualquer movimentação (entrada ou saída). Armazena a conversão exata da operação (`foreign_currency`, `foreign_amount`, `settlement_amount_brl`, `exchange_rate`, `effective_spread_percentage`), o `avenia_ticket_id` para conciliação via Webhooks e o `blockchain_transaction_hash` para rastreabilidade on-chain.
+
+**`import_transactions`** — extensão da transação para fluxos de Saída (pagamento de fornecedores). A chave primária é a própria FK (`transaction_id`). Exige o vínculo obrigatório com `beneficiaries` e a definição do `transfer_method` (TED, PIX, BLOCKCHAIN, SALDO_EM_CONTA) usado para enviar os fundos.
+
+**`export_transactions`** — extensão da transação para fluxos de Entrada (geração de Invoices/Cobranças Internacionais). Totalmente desacoplada de `beneficiaries` (já que o dinheiro entra). Armazena o código de cobrança único (`external_billing_code`), os dados de contato do cliente internacional e a `due_date` da fatura.
+
+## Regras de Negócio e Integridade
+
+**Isolamento estrutural de transações** — em vez de depender de validações frágeis em uma única tabela gigantesca, a própria divisão física em `import_transactions` (exigindo Beneficiário) e `export_transactions` (exigindo Dados da Fatura) garante a integridade direcional da operação logo na modelagem, impedindo a inserção cruzada de dados.
+
+**Consistência de destinos financeiros (`beneficiaries`)** — regra de negócio esperada conforme o `receiving_method` escolhido:
+
+| `receiving_method` | Exige |
+|---|---|
+| `WALLET_CRYPTO` | Endereço da carteira e rede blockchain |
+| `CHAVE_PIX` | Chave Pix preenchida |
+| `CONTA_BANCARIA` | Formulário completo SWIFT/Local (documento de identificação, titular, código do banco, agência, conta e tipo de conta) |
