@@ -1,0 +1,27 @@
+name: GitLab Sync
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+    types:
+      - opened
+      - synchronize
+      - reopened
+  workflow_dispatch:
+
+concurrency:
+  group: gitlab-sync-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  sync-to-gitlab:
+    name: Sync to GitLab
+    uses: AGES-V-Stable/cicd/.github/workflows/reusable-gitlab-sync.yml@main
+    secrets: inherit
