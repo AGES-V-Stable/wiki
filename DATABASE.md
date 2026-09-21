@@ -14,8 +14,7 @@ O banco de dados da V-Stable é modelado em **PostgreSQL**, com o schema aplicad
 
 <div align="center">
   
-  <img width="1084" height="666" alt="ER Diagram0" src="https://github.com/user-attachments/assets/5a0146e0-599c-4407-b522-2d523a6f38ed" />
-<br/>
+<img width="1064" height="969" alt="v-stable modelo-conceitual-v8 2" /><br/>
   <em>Modelo Conceitual</em>
 </div>
 
