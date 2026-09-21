@@ -12,10 +12,12 @@ O banco de dados da V-Stable é modelado em **PostgreSQL**, com o schema aplicad
   <em>Modelo Lógico de Dados</em>
 </div>
 
+
+
+
 <div align="center">
-  
-<img width="1064" height="969" alt="v-stable modelo-conceitual-v8 2" /><br/>
-  <em>Modelo Conceitual</em>
+<img width="1064" height="969" alt="modelo-conceitual-v8-2" src="https://github.com/user-attachments/assets/37788758-8ab9-48f0-a9c2-b33d2ff4596d" />
+<em>Modelo Conceitual</em>
 </div>
 
 ## Padrões Adotados
