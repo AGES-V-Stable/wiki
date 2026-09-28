@@ -90,25 +90,40 @@ npm run dev        # Inicia o projeto em modo de desenvolvimento
 
 ## 5. Desenvolvimento
 
+Antes de implementar, leia o `AGENTS.md` na raiz do repositório em que vai trabalhar:
+
+- [Frontend: `AGENTS.md`](https://github.com/AGES-V-Stable/frontend/blob/main/AGENTS.md)
+- [Backend: `AGENTS.md`](https://github.com/AGES-V-Stable/backend/blob/main/AGENTS.md)
+
+O `CONTRIBUTING.md` descreve o fluxo da equipe; o `AGENTS.md` complementa esse fluxo com o mapa da arquitetura, convenções, regras de segurança, testes e comandos específicos do projeto. Consulte o código e a configuração atual quando houver dúvida, e mantenha ambos os documentos alinhados quando os comandos ou padrões mudarem.
+
 - Implemente POR COMPLETO a funcionalidade descrita na task
-- Siga as boas práticas de código do projeto (clean code, SOLID)
+- Respeite os limites e padrões de arquitetura descritos no `AGENTS.md` e já usados no projeto
 - Mantenha o código organizado e legível
+- Para toda mudança de comportamento, inclua ou atualize testes da funcionalidade no mesmo PR. Siga AAA (Arrange, Act, Assert), FIRST e use nomes descritivos. O teste não precisa ser escrito antes da implementação, mas deve fazer parte da entrega.
 
 ## 6. Verificações: Lint, Testes e Build
 
-**Obrigatório:** toda feature deve ter testes desenvolvidos (unitários e/ou de integração), de acordo com o que for aplicável ao módulo alterado.
+**Obrigatório:** toda mudança comportamental deve ter testes unitários e/ou de integração, conforme aplicável ao módulo alterado. Use os comandos do `AGENTS.md` e execute as verificações relevantes antes de abrir o PR.
 
-⚠️ Não serão aceitos PRs sem linting, formatação e testes bem-sucedidos (correspondentes aos módulos desenvolvidos).
+⚠️ Não serão aceitos PRs com falhas nas verificações configuradas para o projeto.
 
 **Front-end (React):**
 ```bash
-npm run lint       # Verifica o código
-npm run build      # Garante que o projeto builda sem erros
+npm run audit
+npm run format:check
+npm run lint
+npm run test:coverage
+npm run build
 ```
+O teste de cobertura do frontend exige no mínimo 80% agregado para linhas, funções, branches e statements.
 
 **Back-end (Spring Boot):**
-- Execute o lint/formatação e os testes unitários e/ou de integração conforme configurado no projeto (Maven ou Gradle).
-- Garanta que a aplicação builda sem erros antes de abrir o PR.
+```bash
+./gradlew test
+./gradlew build
+```
+Os testes de integração com Testcontainers podem exigir Docker. O CI também executa Sonar; para a cobertura mínima de 80% no backend, consulte o `AGENTS.md`: o JaCoCo gera relatórios, mas o Gradle ainda não aplica esse limite como gate de build.
 
 **Requisitos mínimos:**
 - ✅ Todos os testes devem passar
