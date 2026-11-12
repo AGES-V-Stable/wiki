@@ -3,31 +3,35 @@
 **Issue:** [AGES-V-Stable/cicd#85](https://github.com/AGES-V-Stable/cicd/issues/85)  
 **Épico:** [cicd#80](https://github.com/AGES-V-Stable/cicd/issues/80)  
 **Planejamento de referência:** [Relatório da #83](PLANEJAMENTO_E_RECONHECIMENTO_TECNICO.md)  
-**Data:** 10/11/2026 — America/Sao_Paulo  
+**Data:** 10/11/2026  
+**Revisão da regra de acesso:** 12/11/2026 — OWNER (Representante), OPERATOR (Operador) e VIEWER (somente leitura) são perfis empresariais; Admin é uma conta separada da V-Stable; decisões de compliance exclusivas das APIs dos provedores.
 **Condição:** avaliação local; entidades sintéticas; integrações externas simuladas.  
-**Situação:** avaliação local complementada e evidências registradas. Os controles existentes foram avaliados nas condições acordadas; funcionalidades ausentes e limites da avaliação estão identificados nas seções 9 e 10. Não representa aprovação de segurança nem certificação.
+**Situação:** avaliação local executada, com revisão da matriz e reteste em 12/11. Há cobertura parcial do escopo integral da issue e divergências entre as regras revisadas e a implementação; ver seções 2.1, 3.4, 9 e 10. Não representa aprovação de segurança nem certificação.
 
 ## 1. Resumo executivo
 
-Os testes locais reproduziram oito grupos de fragilidades: confirmação de oferta sem TOTP; perda do controle de reutilização e bloqueio TOTP entre instâncias/reinícios; permissões administrativas excessivas; validação e consumo de TOTP sem exclusão entre operações concorrentes; aceitação de arquivos truncados identificados apenas pelo prefixo PDF/PNG/JPEG; manutenção de sessão após alteração de senha na base isolada; perda de precisão de valores cripto no histórico; e aceitação de tarifa negativa no adapter BlindPay.
+Os testes locais reproduziram oito grupos de fragilidades: confirmação de oferta sem TOTP; perda do controle de reutilização e bloqueio TOTP entre instâncias/reinícios; possibilidade de decisão manual de compliance por Admin; validação e consumo de TOTP sem exclusão entre operações concorrentes; aceitação de arquivos truncados identificados apenas pelo prefixo PDF/PNG/JPEG; manutenção de sessão após alteração de senha na base isolada; perda de precisão de valores cripto no histórico; e aceitação de tarifa negativa no adapter BlindPay. A conclusão anterior sobre segregação entre SUPPORT, COMPLIANCE_ANALYST e SUPER_ADMIN foi retirada: esses três níveis não fazem parte da regra de negócio revisada.
 
 Também foram observados controles efetivos nos cenários executados: rejeição de JWT inválido/expirado e de challengeToken em rotas protegidas, bloqueio de usuários empresariais nas rotas administrativas, isolamento de recursos de empresas diferentes, rejeição de oferta expirada ou valores adulterados, unicidade de uma execução sob cinco confirmações concorrentes e autenticação/deduplicação de webhooks BlindPay.
 
 | Execução | Casos | PASS | FAIL | Ignorados |
 |---|---:|---:|---:|---:|
-| Regressão existente do backend | 1.244 | 1.238 | 0 | 6 |
-| Regressão existente do frontend | 772 | 772 | 0 | 0 |
-| Diagnóstico específico da #85, após complementação | 217 | 198 | 19 | 0 |
+| Regressão histórica do backend, em 10/11 | 1.244 | 1.238 | 0 | 6 |
+| Regressão histórica do frontend, em 10/11 | 772 | 772 | 0 | 0 |
+| Diagnóstico histórico da #85, em 10/11, com a matriz administrativa anterior | 217 | 198 | 19 | 0 |
+| Diagnóstico intermediário de 12/11, antes do esclarecimento sobre VIEWER e OWNER | 221 | 204 | 17 | 0 |
+| Diagnóstico vigente de 12/11, com OWNER/OPERATOR/VIEWER e Admin separado | 228 | 212 | 16 | 0 |
+| Regressão do backend no commit atualizado, em 12/11 | 1.241 | 1.235 | 0 | 6 |
 
-Os 19 FAIL são asserções de comportamento seguro que a versão avaliada não satisfaz; **não são 19 vulnerabilidades independentes**. A seção 6 agrupa as causas e limita o impacto ao que foi demonstrado. A execução diagnóstica definitiva não apresentou falhas de inicialização, consultas SQL dos testes ou configuração dos mocks.
+Os 19 FAIL acima pertencem à captura histórica de 10/11 e incluem cinco reprovações baseadas na matriz administrativa agora substituída; não devem ser usados como resultado da nova regra. **Falhas de casos não equivalem a vulnerabilidades independentes.** A seção 6 agrupa as causas e limita o impacto ao que foi demonstrado. Os snapshots históricos foram preservados, sem reclassificar seus resultados como se tivessem sido executados com a nova matriz.
 
-Foram acrescentados e executados **46 casos** para completar a avaliação local de sessão, moedas, escalas, tarifas, persistência, recotação até payout simulado, estados terminais, falhas dos clientes e limites multipart em HTTP real. As verificações locais disponíveis anteriormente pendentes foram substituídas por resultados PASS/FAIL. As linhas PARTIAL restantes identificam funcionalidades ausentes, configurações externas não exercitadas ou conclusões mais amplas que os casos demonstram; não significam que os cenários locais aqui definidos ficaram sem execução.
+Na complementação histórica de 10/11, foram acrescentados e executados **46 casos** de sessão, moedas, escalas, tarifas, persistência, recotação até payout simulado, estados terminais, falhas dos clientes e limites multipart em HTTP real. A primeira revisão de 12/11 produziu 221 casos, mas exigia incorretamente permissões idênticas para OWNER e OPERATOR e deixava VIEWER fora da matriz. Essa interpretação foi substituída após esclarecimento da equipe. As capturas antigas permanecem como histórico, não como resultado da matriz vigente. PARTIAL identifica funcionalidades ausentes, cobertura incompleta ou conclusões mais amplas que os casos demonstram; não equivale a requisito integralmente atendido.
 
 A cobertura do frontend foi de 95,74% de linhas, 93,67% de statements, 93,90% de funções e 87,25% de branches. Cobertura de código e regressão funcional não equivalem a cobertura completa dos requisitos de segurança.
 
 ## 2. Versões e decisões de escopo
 
-As referências remotas foram atualizadas e os seguintes HEAD locais foram avaliados:
+Na avaliação histórica de 10/11, os seguintes HEAD locais foram avaliados. O commit do reteste de 12/11 está na seção 3.4; resultados antigos não são automaticamente atribuídos à versão mais recente:
 
 | Repositório | Branch | Commit completo |
 |---|---|---|
@@ -36,24 +40,28 @@ As referências remotas foram atualizadas e os seguintes HEAD locais foram avali
 | cicd | main | `940f9d142e733cfdfe69f5cbd14be0a1bcd51695` |
 | wiki | main | `a853aedfc9d64b8dab452e7e1b969fbbca56a10a` |
 
-Os novos testes e este relatório são alterações locais adicionais, ainda não publicadas. Os hashes SHA-256 dos arquivos da avaliação são registrados na evidência diagnóstica para identificar exatamente a instrumentação utilizada.
+Cada captura identifica os commits e os hashes SHA-256 dos arquivos da avaliação, incluindo alterações locais adicionais ao HEAD, para identificar exatamente a instrumentação utilizada. Publicar ou integrar os artefatos não equivale a executar novamente os testes.
 
 O backend contém mudanças posteriores ao reconhecimento da #83, incluindo vínculos empresariais e as migrations V9–V11. Não se presumiu que os achados de 08/11 permanecessem válidos.
 
 O prompt final fornecido pelo solicitante definiu os HEAD locais e provedores simulados como escopo. As branches `iachat-backend` e `ia-chatbot` não foram integradas nem avaliadas dinamicamente. O endpoint `/v1/support/chat` não existe no HEAD de backend avaliado.
 
-### 2.1. Matriz administrativa utilizada
+### 2.1. Matriz de acesso revisada em 12/11/2026
 
-A regra de somente leitura para SUPPORT foi confirmada pelo solicitante após identificar divergência com uma definição anterior.
+A regra abaixo incorpora o esclarecimento da equipe: existem três perfis de **usuário empresarial**, vinculados à empresa, e uma **conta administrativa da plataforma**, separada desses usuários. "Operador" havia sido usado genericamente para usuários associados à empresa; isso não elimina VIEWER nem torna todos os perfis equivalentes. "Visualizar tudo" não concede acesso a outras empresas.
 
-| Ação | USER | SUPPORT | COMPLIANCE_ANALYST | SUPER_ADMIN |
+| Ação | OWNER — Representante | OPERATOR — Operador | VIEWER — Visualizador | ADMIN — V-Stable |
 |---|---|---|---|---|
-| Consultar recursos empresariais | Apenas conforme vínculo/permissão e empresa | Consulta administrativa | Consulta necessária ao compliance | Consulta administrativa |
-| Aprovar/reprovar compliance | Negado | Negado | Permitido | Permitido |
-| Alterar cadastro empresarial | Negado | Negado | Negado | Permitido |
-| Excluir empresa | Negado | Negado | Negado | Permitido |
+| Consultar dados e recursos empresariais | Da própria empresa | Da própria empresa | Da própria empresa | Acesso administrativo global |
+| Operar transferências e cadastrar beneficiários | Permitido na própria empresa | Permitido na própria empresa | Negado; somente leitura | Acesso administrativo conforme endpoints; cobertura operacional ainda parcial |
+| Permissões empresariais de membros e representação | Capacidades de proprietário, incluindo MEMBERS_READ/MEMBERS_MANAGE anunciadas pelo app | Sem capacidades exclusivas de proprietário | Sem capacidades de escrita/gestão | Administração da plataforma; sem vínculo empresarial automático |
+| Enviar termos, documentos, KYB e RFI | Fluxos de representação do OWNER | Sem acesso exclusivo do OWNER | Negado | Não pressupõe papel de representante empresarial |
+| Editar/excluir empresas e gerenciar permissões gerais administrativamente | Sem privilégio administrativo global | Sem privilégio administrativo global | Sem privilégio administrativo global | Permitido, conforme regra administrativa informada |
+| Aprovar/reprovar compliance manualmente | Negado | Negado | Negado | Negado |
 
-USER não recebe administração global. Os perfis empresariais `OWNER`, `OPERATOR` e `VIEWER` seguem as permissões implementadas e documentadas em `backend/docs/company-memberships.md`; são distintos dos níveis de administrador.
+Mapeamento confirmado pela equipe: `OWNER` é Representante, `OPERATOR` é quem pode operar e `VIEWER` é quem apenas visualiza. Os três autenticam como `USER`, com permissões calculadas pelo vínculo empresarial. Admin autentica como `ADMIN`/`ROLE_ADMIN`, sem `companyId` ou `companyAccess` empresarial. O código ainda contém o enum legado `AdminAccessLevel`; `SUPER_ADMIN` é apenas a fixture exigida pelo schema atual, não um novo perfil de negócio.
+
+**Interpretação corrigida:** as capacidades adicionais de OWNER não constituem falha apenas por diferirem de OPERATOR. TC-RBAC-07 passou a verificar as permissões próprias de cada perfil, retirando a exigência de igualdade. A presença de MEMBERS_MANAGE na resposta não comprova que todas as operações de gestão estejam implementadas ou tenham sido testadas. Enviar documentos ou solicitar avaliação não equivale a aprovar/reprovar compliance: a decisão continua exclusiva das APIs dos provedores e de seus fluxos autenticados/validados. A revisão altera somente testes e documentação; nenhuma permissão de produção foi modificada.
 
 ## 3. Metodologia, ambiente e evidências
 
@@ -101,7 +109,31 @@ Nomes de parametrizações que serializam DTOs são reduzidos a um índice com p
 
 O comando `gradlew.bat build --no-daemon --console=plain` também terminou com **BUILD SUCCESSFUL**, após a inclusão dos testes e da tarefa diagnóstica. A suíte funcional manteve os mesmos 1.244 casos, seis deles desabilitados na origem. O diagnóstico permanece separado e reprova os controles documentados.
 
-A última verificação conjunta executou `gradlew.bat securityAssessmentTest build --continue --no-daemon --console=plain`: a regressão manteve zero falhas e as tarefas check/build foram concluídas. O processo conjunto retornou 1 exclusivamente pelas 19 asserções reprovadas da tarefa diagnóstica. Esse resultado não é erro de compilação, de inicialização dos testes ou uma remediação aprovada. O resumo está em [verificacao-final.json](https://github.com/AGES-V-Stable/backend/blob/main/docs/security/evidencias-85/verificacao-final.json).
+A verificação conjunta histórica de 10/11 executou `gradlew.bat securityAssessmentTest build --continue --no-daemon --console=plain`: a regressão manteve zero falhas e as tarefas check/build foram concluídas. O processo conjunto retornou 1 pelas 19 asserções reprovadas daquela captura. Esse resultado não é erro de compilação, de inicialização dos testes ou uma remediação aprovada. O resumo histórico está em [verificacao-final.json](https://github.com/AGES-V-Stable/backend/blob/main/docs/security/evidencias-85/verificacao-final.json).
+
+### 3.4. Reteste da matriz revisada — 12/11/2026
+
+Backend avaliado: commit `61a9662c8f9d8051540bdf551b399d36c8bec719`, com as alterações locais da classe `ApplicationSecurityAssessmentTest` identificadas pelo SHA-256 na evidência. Ambiente local, PostgreSQL efêmero e integrações simuladas; nenhum sandbox foi acessado. A pasta `revisao-perfis-2026-11-12` preserva a captura intermediária de 221 casos, cuja exigência de igualdade entre OWNER e OPERATOR foi substituída. A captura vigente fica em `perfis-confirmados-2026-11-12`.
+
+**Correção de interpretação:** a reprovação intermediária de TC-RBAC-07 por diferença de permissões entre OWNER e OPERATOR foi retirada. A equipe esclareceu que são perfis distintos; não se trata de remediação do produto. Os cinco FAIL históricos que exigiam segregação entre níveis administrativos também permanecem retirados. A restrição de decisões manuais de compliance por Admin continua sendo requisito.
+
+**Resultado vigente:** 228 casos, 212 PASS, 16 FAIL e zero ignorados, conforme [assessment.json](https://github.com/AGES-V-Stable/backend/blob/main/docs/security/evidencias-85/perfis-confirmados-2026-11-12/assessment.json). A tarefa diagnóstica retornou código 1 por asserções; não houve falha de compilação/inicialização na captura final. Das 16 reprovações, 14 correspondem aos demais achados já documentados e duas à decisão manual de compliance por Admin. A matriz TC-RBAC-01–09 contém 20 casos: 18 PASS e dois FAIL. A redução de 17 para 16 reprovações vem da correção da interpretação de TC-RBAC-07, não de alteração de produção.
+
+| Caso | Quantidade | Resultado observado | Status |
+|---|---:|---|---|
+| TC-RBAC-01 | 2 | Admin enviou APPROVED/REJECTED: HTTP 200 e KYB/AML alterados de PENDING para a decisão enviada; esperado 403 e estado inalterado | FAIL |
+| TC-RBAC-02 | 1 | Admin excluiu a empresa sintética sem dependências; HTTP 204 e ausência confirmada no banco | PASS |
+| TC-RBAC-03 | 1 | Admin editou cadastro; HTTP 200 e novo nome confirmado no banco | PASS |
+| TC-RBAC-04 | 3 | OWNER, OPERATOR e VIEWER consultaram empresa/beneficiários próprios (200); outra empresa bloqueada (403) | PASS |
+| TC-RBAC-05 | 2 | Ambos confirmaram oferta própria (200), com uma execução persistida; envio ao provedor simulado | PASS |
+| TC-RBAC-06 | 6 | OWNER/OPERATOR/VIEWER não conseguiram aprovar nem reprovar compliance: 403 e estado inalterado | PASS |
+| TC-RBAC-07 | 3 | Permissões anunciadas refletem o perfil: OWNER com representação/gestão empresarial; OPERATOR com operação; VIEWER somente leitura | PASS |
+| TC-RBAC-08 | 1 | VIEWER recebeu 403 ao confirmar oferta e cadastrar beneficiário, sem novas operações persistidas | PASS |
+| TC-RBAC-09 | 1 | Admin retornou ADMIN/ROLE_ADMIN, sem companyId/companyAccess de usuário empresarial | PASS |
+
+TC-RBAC-07 verifica o contrato de permissões próprio de cada perfil, sem exigir igualdade. Não demonstra execução de todos os endpoints de gestão de usuários/permissões. A revisão não altera o comportamento de produção nem precisa alterar a definição atual de `CompanyRole` para excluir VIEWER ou igualar OWNER a OPERATOR.
+
+**Regressão vigente:** o comando conjunto `gradlew.bat securityAssessmentTest build --continue --no-daemon --console=plain` concluiu as tarefas `test`, `check` e `build`, com 1.241 casos de regressão, 1.235 PASS, zero FAIL e seis ignorados. O processo retornou código 1 exclusivamente pelas 16 asserções da tarefa diagnóstica; portanto, não se apresenta o comando conjunto como BUILD SUCCESSFUL. A quantidade de regressão pertence ao commit atualizado e difere da captura histórica; o frontend não foi reexecutado. Evidências: [integration-retest.json](https://github.com/AGES-V-Stable/backend/blob/main/docs/security/evidencias-85/perfis-confirmados-2026-11-12/integration-retest.json) e [verificacao.json](https://github.com/AGES-V-Stable/backend/blob/main/docs/security/evidencias-85/perfis-confirmados-2026-11-12/verificacao.json). Nenhum código de produção foi alterado e nenhum achado foi corrigido nesta revisão.
 
 ## 4. Inventário de endpoints e cobertura
 
@@ -158,9 +190,15 @@ As condições de ambiente da seção 3 aplicam-se a todas as linhas. IDs presen
 | TC-AUTHZ-06 | Propriedade KYC | Upload de documento por kycVerificationId | A usa verificação de representante de B | HTTP 403 antes do provedor | HTTP 403; cliente externo não chamado | Teste reproduzido/PostgreSQL | PASS |
 | TC-AUTHZ-07 | Vínculo e permissão atuais | `CompanyAuthorizationIntegrationTest`, `CompanyAccessTest` | OWNER/OPERATOR/VIEWER, vínculo removido, token anterior à mudança | Respeitar vínculo atual e negar ações sem permissão | Suítes passaram | Testes reproduzidos da baseline/PostgreSQL | PASS |
 | TC-AUTHZ-08 | Defesa no banco | Migrations e Terraform | Inspeção das políticas e usuário de aplicação | Identificar privilégio e isolamento efetivos | Sem políticas RLS identificadas; Terraform usa master_username; permissões reais do RDS não consultadas | Código/arquitetura | PARTIAL |
-| TC-RBAC-01 | Aprovar compliance | `PATCH /v1/companies/{id}/compliance-status` | Três níveis administrativos | SUPPORT:403; demais:200 | Todos obtiveram 200 | Teste reproduzido/PostgreSQL | FAIL |
-| TC-RBAC-02 | Excluir empresas | `DELETE /v1/companies/{id}` | Empresa sintética sem dependências; três níveis | Apenas SUPER_ADMIN:204 | Todos obtiveram 204 | Teste reproduzido/PostgreSQL | FAIL |
-| TC-RBAC-03 | Alterar cadastro | `PUT /v1/companies/{id}` | Cadastro sintético válido; três níveis | Apenas SUPER_ADMIN:200 | Todos obtiveram 200 | Teste reproduzido/PostgreSQL | FAIL |
+| TC-RBAC-01 | Proibir decisão manual de compliance | `PATCH /v1/companies/{id}/compliance-status` | Admin; APPROVED e REJECTED, em KYB e AML | HTTP 403 e estado persistido inalterado | HTTP 200 e decisões persistidas nos dois casos | Reteste local, seção 3.4 | FAIL |
+| TC-RBAC-02 | Excluir empresas | `DELETE /v1/companies/{id}` | Admin; empresa sintética sem dependências | HTTP 204 e empresa removida | HTTP 204 e ausência confirmada no banco | Reteste local, seção 3.4 | PASS |
+| TC-RBAC-03 | Alterar cadastro | `PUT /v1/companies/{id}` | Admin; cadastro sintético válido | HTTP 200 e novo nome persistido | HTTP 200 e nome persistido | Reteste local, seção 3.4 | PASS |
+| TC-RBAC-04 | Consulta e isolamento | Empresas e lista de beneficiários | OWNER, OPERATOR e VIEWER | HTTP 200 na própria empresa; 403 na outra | Três perfis respeitaram esses acessos e bloqueios | Reteste local, seção 3.4 | PASS |
+| TC-RBAC-05 | Operação financeira por perfil | Confirmação de oferta própria | OWNER e OPERATOR | HTTP 200 e uma execução registrada | Ambos obtiveram 200 e uma execução; TOTP avaliado separadamente em TC-FIN-01 | Reteste local, seção 3.4 | PASS |
+| TC-RBAC-06 | Proibir decisão manual de usuários | Atualização de compliance da própria empresa | OWNER/OPERATOR/VIEWER × APPROVED/REJECTED | HTTP 403 e estado inalterado | Seis bloqueios 403 sem alteração de KYB/AML | Reteste local, seção 3.4 | PASS |
+| TC-RBAC-07 | Permissões próprias de cada perfil | `GET /v1/users/me` | OWNER, OPERATOR e VIEWER | Capacidades de cada papel e accountType USER, sem exigir igualdade | Três conjuntos de permissões conferidos | Reteste local, seção 3.4 | PASS |
+| TC-RBAC-08 | Somente leitura | Confirmação de oferta e cadastro de beneficiário | VIEWER; payloads sintéticos | HTTP 403 sem nova transferência/beneficiário | Duas respostas 403; contagem de registros inalterada | Reteste local, seção 3.4 | PASS |
+| TC-RBAC-09 | Separação de conta administrativa | `GET /v1/users/me` | Conta Admin sintética | ADMIN/ROLE_ADMIN sem vínculo empresarial | Tipo/autoridade conferidos e vínculo empresarial ausente | Reteste local, seção 3.4 | PASS |
 
 ### 5.3. Entradas, contratos, exposição e recursos
 
@@ -267,23 +305,17 @@ O cenário foi reproduzido em instâncias Java locais. A conclusão de que ambie
 
 **Recomendação:** persistir o consumo da janela temporal e o bloqueio por conta em armazenamento compartilhado, com atualização atômica. Definir também o identificador inequívoco da conta/tipo de conta e o tratamento de troca do segredo. Evitar registrar indefinidamente apenas os seis dígitos, pois podem se repetir em janelas futuras.
 
-### SEC85-03 — Níveis administrativos recebem permissões irrestritas
+### SEC85-03 — Admin pode decidir compliance manualmente
 
 **Prioridade:** alta. **Referência anterior:** VULN-06. **Classificação:** CWE-863; OWASP API5:2023.
 
-**Código:** [AdministratorEntity.java:78](https://github.com/AGES-V-Stable/backend/blob/07c2302fea9434dfd107f803010a6d066efb548a/src/main/java/ages/vstable/backend/entity/AdministratorEntity.java#L78) retorna `ROLE_ADMIN` para todos os níveis. Em CompanyController, os métodos de [compliance:118](https://github.com/AGES-V-Stable/backend/blob/07c2302fea9434dfd107f803010a6d066efb548a/src/main/java/ages/vstable/backend/controller/CompanyController.java#L118), [edição:135](https://github.com/AGES-V-Stable/backend/blob/07c2302fea9434dfd107f803010a6d066efb548a/src/main/java/ages/vstable/backend/controller/CompanyController.java#L135) e [exclusão:156](https://github.com/AGES-V-Stable/backend/blob/07c2302fea9434dfd107f803010a6d066efb548a/src/main/java/ages/vstable/backend/controller/CompanyController.java#L156) usam a mesma autoridade para operações de poderes diferentes.
+**Regra revisada:** nenhum usuário humano, incluindo Admin, pode aprovar ou reprovar compliance. O resultado deve ser determinado pelos provedores e atualizado pelos fluxos de integração. Ter uma única autoridade `ROLE_ADMIN` deixa de ser, por si só, uma falha.
 
-**Reprodução segura:** TC-RBAC-01/02/03 em `ApplicationSecurityAssessmentTest`. São administradores reais da base efêmera, com JWT emitido pela aplicação. Não se usa `@WithMockUser` para forjar essas permissões.
+**Código:** `CompanyController.updateComplianceStatus` permite `PATCH /v1/companies/{id}/compliance-status` para `ROLE_ADMIN`; `CompanyService.updateComplianceStatus` persiste os estados enviados pelo cliente sem exigir uma decisão recebida do provedor. A associação de edição/exclusão a Admin é compatível com a nova regra e não integra mais este achado.
 
-| Operação indevida | Perfil | Esperado | Obtido |
-|---|---|---:|---:|
-| Aprovar compliance | SUPPORT | 403 | 200 |
-| Excluir empresa sintética sem dependências | SUPPORT | 403 | 204 |
-| Excluir empresa sintética sem dependências | COMPLIANCE_ANALYST | 403 | 204 |
-| Alterar cadastro | SUPPORT | 403 | 200 |
-| Alterar cadastro | COMPLIANCE_ANALYST | 403 | 200 |
+**Reprodução segura revisada:** executar TC-RBAC-01 na base efêmera com Admin sintético e JWT real. Para cada decisão APPROVED/REJECTED, enviar KYB/AML no PATCH e comparar o banco antes/depois. O esperado é HTTP 403 sem alteração. TC-RBAC-06 faz o mesmo com Operador e Representante. O resultado da execução revisada consta na seção 3.4.
 
-**Recomendação:** mapear autoridades/permissões por accessLevel e autorizar cada ação conforme a matriz da seção 2.1. Manter os testes negativos e positivos e verificar que alterações de privilégio valem para tokens existentes. A exclusão de empresas com histórico financeiro exige política própria; não foi demonstrada remoção em cascata de toda a base financeira.
+**Recomendação:** impedir decisões manuais de compliance por credenciais humanas, inclusive Admin; manter a atualização somente nos fluxos validados dos provedores e registrar origem/evento da decisão. Preservar a possibilidade de consulta e o envio de documentação conforme a regra de acesso. Não reintroduzir os três níveis administrativos antigos. A exclusão de empresas com histórico financeiro exige política própria; não foi demonstrada remoção em cascata de toda a base financeira.
 
 ### SEC85-04 — Validação e consumo de TOTP permitem intercalamento
 
@@ -384,7 +416,7 @@ Não se afirma que a BlindPay real emita essa resposta, que um usuário consiga 
 | VULN-03 | Observação estática mantida em parte | Allowlist de `LambdaSecretsEnvironmentPostProcessor.java:24` não inclui TWO_FACTOR_ENCRYPTION_KEY; nenhum deploy Lambda foi realizado. AI_SUPPORT_API_KEY não é requisito funcional do HEAD sem chatbot. |
 | VULN-04 | Não revalidado | Exposição de credencial em issue pública foi herdada do planejamento; a credencial não foi consultada, testada nem reproduzida aqui. Gestão de segredos fica na análise correspondente do épico. |
 | VULN-05 | Não comprovado como BOLA geral | Não se identificou RLS nas migrations; Terraform liga a aplicação ao master_username. Isso aumenta dependência dos controles da aplicação e privilégio potencial, mas não comprova acesso cruzado. Os testes horizontais executados passaram. |
-| VULN-06 | Confirmado dinamicamente | SEC85-03, conforme matriz aprovada pelo solicitante. |
+| VULN-06 | Conclusão anterior substituída | A segregação SUPPORT/COMPLIANCE_ANALYST/SUPER_ADMIN não é requisito da nova matriz. SEC85-03 passa a avaliar a proibição de decisão manual de compliance, inclusive para Admin; resultados antigos não comprovam o novo requisito. |
 | VULN-07 | Observação de IaC | `database/main.tf:23` define Single-AZ, linha 24 backup_retention_period=0 e linha 27 skip_final_snapshot=true. Não comprova a configuração efetivamente aplicada na AWS nem ausência de qualquer backup externo. |
 | VULN-08 | Revogação após alteração persistida de senha reproduzida; demais aspectos estáticos | SEC85-06 e TC-AUTH-16. Armazenamento e TTL identificados. Não foi demonstrado XSS, furto de sessão ou exploração de headers de CloudFront. |
 | VULN-09 | Parcial | Ausência de limitador identificada nas rotas de login/onboarding/quotes e de throttling explícito no stage IaC. Não foram testados limites efetivos da AWS ou saturação. Chatbot ausente no HEAD. |
@@ -423,7 +455,7 @@ npm run test:coverage -- --maxWorkers=2 --reporter=default --reporter=junit --ou
 
 O uso de ExecutionPolicy Bypass limita-se ao processo que executa o exportador e não altera a política global do Windows. Esse exportador não faz requisições às APIs.
 
-**Resultado esperado na versão vulnerável:** a tarefa diagnóstica termina com código de saída diferente de zero pelos 19 FAIL documentados. Não use `ignoreFailures` para apresentar o diagnóstico como aprovado. A tarefa não faz parte de `build/check` nem do PIT; a suíte funcional permanece separada para distinguir regressão e diagnóstico. A integração dos testes corrigidos ao gate deve ser tratada na remediação.
+**Resultado observado no reteste vigente de 12/11:** a tarefa diagnóstica termina com código de saída diferente de zero pelos 16 FAIL documentados na seção 3.4. Não use `ignoreFailures` para apresentar o diagnóstico como aprovado. A tarefa não faz parte de `build/check` nem do PIT; a suíte funcional permanece separada para distinguir regressão e diagnóstico. A integração dos testes corrigidos ao gate deve ser tratada na remediação.
 
 Execuções filtradas sobrescrevem os XMLs daquela tarefa; para regenerar o conjunto completo de evidências, rode a tarefa sem `--tests` antes de exportar. Arquivos exportados de execuções antigas não devem ser confundidos com reteste de uma correção.
 
@@ -432,7 +464,7 @@ Execuções filtradas sobrescrevem os XMLs daquela tarefa; para regenerar o conj
 O navegador não substitui os testes de API: ocultar um botão não impede chamadas diretas. Para revisão pelo responsável, o caminho mais seguro é rodar os grupos acima e abrir `backend/build/reports/tests/securityAssessmentTest/index.html`, acompanhando estes casos:
 
 1. TC-AUTH-02: primeira e segunda instâncias recebem o mesmo código; observar a ausência da rejeição na segunda.
-2. TC-RBAC-01/02/03: comparar os status HTTP com a matriz de permissões, exclusivamente na base efêmera.
+2. TC-RBAC-01–09: comparar status HTTP, persistência e permissões anunciadas com a matriz revisada, exclusivamente na base efêmera. Incluir VIEWER como somente leitura, preservar a distinção de OWNER e OPERATOR e separar a conta Admin dos usuários empresariais. Não voltar a exigir segregação entre os níveis administrativos antigos.
 3. TC-FIN-01 e TC-CONC-02: distinguir falta de TOTP da unicidade de execução; um controle não substitui o outro.
 4. TC-INT-01/02: acompanhar a aceitação de assinatura válida e a rejeição do corpo adulterado, sem cadastrar webhooks em terceiros.
 5. TC-API-05: verificar que os arquivos contêm apenas prefixos e que o retorno é de um cliente simulado.
@@ -456,15 +488,15 @@ Os itens parciais das tabelas não recebem automaticamente CWE: ausência de fun
 
 ## 10. Checklist do DoD da #85
 
-As caixas abaixo indicam a conclusão das **atividades de avaliação no escopo local autorizado**, após a complementação. Não significam que todos os controles passaram, que todas as funcionalidades existem ou que o sistema é seguro. PASS/FAIL/PARTIAL dos casos continuam visíveis na seção 5. A recuperação e o webhook Avenia ausentes são limitações registradas, conforme entendimento do solicitante; não foram implementados nesta issue de testes.
+As caixas abaixo refletem o **escopo integral da issue**, não apenas a existência de alguns testes locais. Itens parciais permanecem abertos: inventariar todas as rotas e testar login não comprova cobertura completa de autorização, validação e abuso em cada operação. Falha de um controle não impede concluir sua avaliação; cobertura insuficiente impede afirmar que todo o requisito foi avaliado. A recuperação e o webhook Avenia ausentes estão registrados como limitações, sem implementação nesta issue de testes.
 
-- [x] **Autenticação, autorização, sessão e isolamento entre empresas avaliados.** Seções 5.1/5.2, TC-AUTH-15/16 e SEC85-06: comportamento de revogação/TTL complementado; endpoints de recuperação/logout ausentes identificados como limitação, sem alegar execução de funcionalidade inexistente.
-- [x] **Endpoints e APIs do escopo local submetidos a casos documentados.** Seção 4 e endpoints.csv: 59 operações identificadas, barreiras testadas nas 55 protegidas e casos específicos nas quatro públicas. Isso não afirma cobertura de todos os payloads de cada operação.
-- [x] **Fluxos de negócio e controles contra abuso avaliados com dados sintéticos.** Cadastro, perfis, repetição, isolamento e confirmação avaliados nas seções 5.2–5.4; rate limiting e funcionalidades ausentes explicitamente limitados.
-- [x] **Integridade de valores, moedas, cotações, beneficiários e transferências avaliada.** Seção 5.4 e TC-FIN-13–19: matriz monetária executada, comparação da persistência e do ticket simulado, fronteiras e tarifas. Perda de precisão e tarifa negativa registradas como falhas em SEC85-07/08; liquidação real fora do escopo.
-- [x] **Idempotência, concorrência, condições de corrida e transições avaliadas nas condições locais definidas.** TC-CONC-01/02 e TC-FIN-08/09; limites de abrangência nas seções 6 e 9.
-- [x] **Integrações e webhooks avaliados dentro das condições autorizadas.** Seção 5.5 e TC-INT-10–13: respostas transitórias, falhas de transporte, deadlines em loopback, repetição e reconciliação simuladas. Receptor Avenia ausente, chatbot fora do HEAD e comportamento AWS/terceiros identificados como limitações, sem testes ativos externos.
+- [ ] **Autenticação, autorização, sessão e isolamento entre empresas — parcial.** Casos locais dos três perfis empresariais e da conta Admin executados, mas sem matriz completa de autorização por objeto/propriedade em todas as operações. Não se exige equivalência entre OWNER/OPERATOR/VIEWER; a cobertura integral de cada perfil e do acesso administrativo ainda não foi demonstrada.
+- [ ] **Endpoints e APIs do escopo — parcial.** Inventário e barreiras de autenticação executados; falta comprovar os demais controles aplicáveis por endpoint.
+- [ ] **Fluxos de negócio e controles contra abuso — parcial.** Há casos sintéticos de cadastro, perfis, repetição e confirmação; avaliação de rate limiting/consumo de recursos e demais fluxos permanece limitada.
+- [ ] **Integridade financeira — parcial.** Casos representativos de valores, moedas, precisão, taxas, cotações e persistência executados; cobertura integral das associações e combinações relevantes não demonstrada.
+- [ ] **Idempotência, concorrência, condições de corrida e transições — parcial.** Cinco confirmações concorrentes, concorrência de TOTP e estados terminais avaliados; outros pontos de TOCTOU e sincronização permanecem sem cobertura demonstrada.
+- [ ] **Integrações e webhooks — parcial.** Testes locais com provedores simulados executados. Sandboxes oficiais ainda não exercitados nesta avaliação; receptor Avenia ausente e demais limites nas seções 5.5 e 9.
 - [x] **Resultados, evidências e limitações registrados para cada caso executado.** Seções 3–5 e arquivos JSON sanitizados; casos individuais da regressão e do diagnóstico enumerados.
 - [x] **Vulnerabilidades reproduzíveis registradas com passos seguros.** Seções 6 e 8; sem movimentação real nem exposição de segredos.
 
-A entrega de testes locais está complementada. O responsável pela issue deve revisar as evidências e as limitações antes do encerramento administrativo no GitHub, que não foi realizado nesta execução. Corrigir os achados e comprovar sua remediação pertence à etapa de correção/reteste; não é condição para registrar que o teste encontrou uma falha.
+A avaliação local e a revisão da matriz estão documentadas; isso não conclui integralmente a #85. O responsável deve revisar os itens parciais antes de encerrar a issue. Corrigir os achados e comprovar sua remediação pertence à etapa de correção/reteste; não é condição para registrar que um teste encontrou uma falha.
