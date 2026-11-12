@@ -6,7 +6,7 @@
 **Data:** 10/11/2026  
 **Revisão da regra de acesso:** 12/11/2026 — OWNER (Representante), OPERATOR (Operador) e VIEWER (somente leitura) são perfis empresariais; Admin é uma conta separada da V-Stable; decisões de compliance exclusivas das APIs dos provedores.
 **Condição:** avaliação local; entidades sintéticas; integrações externas simuladas.  
-**Situação:** avaliação local executada, com revisão da matriz e reteste em 12/11. Há cobertura parcial do escopo integral da issue e divergências entre as regras revisadas e a implementação; ver seções 2.1, 3.4, 9 e 10. Não representa aprovação de segurança nem certificação.
+**Situação:** avaliação local complementada em 12/11, com plano finito de casos por requisito, inventário e rastreabilidade por operação (seção 3.5). Permanecem dependências externas e funcionalidades indisponíveis, explicitadas nas seções 9 e 10. As reprovações são achados, não casos deixados sem execução. Não representa aprovação de segurança nem certificação.
 
 ## 1. Resumo executivo
 
@@ -20,10 +20,11 @@ Também foram observados controles efetivos nos cenários executados: rejeição
 | Regressão histórica do frontend, em 10/11 | 772 | 772 | 0 | 0 |
 | Diagnóstico histórico da #85, em 10/11, com a matriz administrativa anterior | 217 | 198 | 19 | 0 |
 | Diagnóstico intermediário de 12/11, antes do esclarecimento sobre VIEWER e OWNER | 221 | 204 | 17 | 0 |
-| Diagnóstico vigente de 12/11, com OWNER/OPERATOR/VIEWER e Admin separado | 228 | 212 | 16 | 0 |
+| Reteste anterior de 12/11, com OWNER/OPERATOR/VIEWER e Admin separado | 228 | 212 | 16 | 0 |
+| Complementação local de 12/11, após revisão requisito por requisito (resultado atual) | 385 | 364 | 21 | 0 |
 | Regressão do backend no commit atualizado, em 12/11 | 1.241 | 1.235 | 0 | 6 |
 
-Os 19 FAIL acima pertencem à captura histórica de 10/11 e incluem cinco reprovações baseadas na matriz administrativa agora substituída; não devem ser usados como resultado da nova regra. **Falhas de casos não equivalem a vulnerabilidades independentes.** A seção 6 agrupa as causas e limita o impacto ao que foi demonstrado. Os snapshots históricos foram preservados, sem reclassificar seus resultados como se tivessem sido executados com a nova matriz.
+Os 19 FAIL da captura de 10/11 incluem cinco reprovações baseadas na matriz administrativa substituída e não são o resultado atual. A captura de 228 casos foi sucedida pela complementação de 385 casos. **Falhas de casos não equivalem a vulnerabilidades independentes.** Dos 21 FAIL atuais, 16 reproduzem os grupos SEC85-01–08, três casos correspondem aos novos SEC85-09/10 e dois são desvios de contrato/robustez OBS85-01/02, sem impacto de segurança explorável demonstrado. Os snapshots anteriores foram preservados.
 
 Na complementação histórica de 10/11, foram acrescentados e executados **46 casos** de sessão, moedas, escalas, tarifas, persistência, recotação até payout simulado, estados terminais, falhas dos clientes e limites multipart em HTTP real. A primeira revisão de 12/11 produziu 221 casos, mas exigia incorretamente permissões idênticas para OWNER e OPERATOR e deixava VIEWER fora da matriz. Essa interpretação foi substituída após esclarecimento da equipe. As capturas antigas permanecem como histórico, não como resultado da matriz vigente. PARTIAL identifica funcionalidades ausentes, cobertura incompleta ou conclusões mais amplas que os casos demonstram; não equivale a requisito integralmente atendido.
 
@@ -97,7 +98,8 @@ As evidências sanitizadas ficam no repositório backend, em [docs/security/evid
 |---|---|
 | [baseline-backend.json](https://github.com/AGES-V-Stable/backend/blob/main/docs/security/evidencias-85/baseline-backend.json) | Resultado individual dos casos existentes do backend, incluindo seis ignorados. |
 | [baseline-frontend.json](https://github.com/AGES-V-Stable/backend/blob/main/docs/security/evidencias-85/baseline-frontend.json) | Resultado individual dos 772 casos do frontend. |
-| [assessment.json](https://github.com/AGES-V-Stable/backend/blob/main/docs/security/evidencias-85/assessment.json) | Resultado individual da execução diagnóstica definitiva; commits e hashes dos testes. |
+| [assessment.json](https://github.com/AGES-V-Stable/backend/blob/main/docs/security/evidencias-85/assessment.json) | Snapshot histórico de 10/11 (217 casos); não é a captura atual. |
+| [complementacao-local-2026-11-12](https://github.com/AGES-V-Stable/backend/tree/main/docs/security/evidencias-85/complementacao-local-2026-11-12) | Captura atual: diagnóstico, regressões, inventário, matrizes de cobertura e verificação; seção 3.5. |
 | [assessment-inicial.json](https://github.com/AGES-V-Stable/backend/blob/main/docs/security/evidencias-85/assessment-inicial.json) | Snapshot da primeira entrega, de 171 casos; histórico preservado, não utilizado como resultado final. |
 | [endpoints.csv](https://github.com/AGES-V-Stable/backend/blob/main/docs/security/evidencias-85/endpoints.csv) | Inventário obtido do mapeamento MVC real, com método, caminho, controller, handler e classificação de acesso. |
 
@@ -134,6 +136,46 @@ Backend avaliado: commit `61a9662c8f9d8051540bdf551b399d36c8bec719`, com as alte
 TC-RBAC-07 verifica o contrato de permissões próprio de cada perfil, sem exigir igualdade. Não demonstra execução de todos os endpoints de gestão de usuários/permissões. A revisão não altera o comportamento de produção nem precisa alterar a definição atual de `CompanyRole` para excluir VIEWER ou igualar OWNER a OPERATOR.
 
 **Regressão vigente:** o comando conjunto `gradlew.bat securityAssessmentTest build --continue --no-daemon --console=plain` concluiu as tarefas `test`, `check` e `build`, com 1.241 casos de regressão, 1.235 PASS, zero FAIL e seis ignorados. O processo retornou código 1 exclusivamente pelas 16 asserções da tarefa diagnóstica; portanto, não se apresenta o comando conjunto como BUILD SUCCESSFUL. A quantidade de regressão pertence ao commit atualizado e difere da captura histórica; o frontend não foi reexecutado. Evidências: [integration-retest.json](https://github.com/AGES-V-Stable/backend/blob/main/docs/security/evidencias-85/perfis-confirmados-2026-11-12/integration-retest.json) e [verificacao.json](https://github.com/AGES-V-Stable/backend/blob/main/docs/security/evidencias-85/perfis-confirmados-2026-11-12/verificacao.json). Nenhum código de produção foi alterado e nenhum achado foi corrigido nesta revisão.
+
+### 3.5. Complementação da cobertura local — 12/11/2026 (resultado atual)
+
+Backend: commit `3983b755e412e6552a1509992fc7d7485497b3bc`, acrescido dos testes identificados por SHA-256 na nova captura. O plano de saída desta etapa é finito: executar LC-API/AUTH/AUTHZ/FIN/INT/CONC/CONFIG/OUT/ABUSE abaixo, reexecutar as regressões e vincular os requisitos da #85 aos casos efetivamente executados. Não se exige testar combinações infinitas nem corrigir os controles reprovados para concluir sua avaliação.
+
+**Execução diagnóstica:** 385 casos, 364 PASS, 21 FAIL, zero ignorados. São **157 novos casos**, dos quais 152 PASS e cinco FAIL. Todos os casos previstos abaixo foram executados; as cinco reprovações novas são detalhadas em SEC85-09/10 e OBS85-01/02. Uma reprovação de controle é diferente de um teste pendente ou de erro da infraestrutura.
+
+**Regressões reexecutadas:** backend 1.241 casos (1.235 PASS, zero FAIL, seis desabilitados na origem); frontend 772 PASS, zero FAIL, código de saída 0. O comando conjunto `gradlew.bat securityAssessmentTest build --continue --no-daemon --console=plain` concluiu `test/check/build/jacocoTestReport` e retornou 1 exclusivamente pela tarefa diagnóstica com 21 asserções reprovadas; não se apresenta esse comando como BUILD SUCCESSFUL. A cobertura do frontend permaneceu em 95,74% linhas, 93,67% statements, 93,90% funções e 87,25% branches. O código de produção não foi modificado.
+
+Artefatos atuais no backend: [assessment.json](https://github.com/AGES-V-Stable/backend/blob/main/docs/security/evidencias-85/complementacao-local-2026-11-12/assessment.json), [endpoints.csv](https://github.com/AGES-V-Stable/backend/blob/main/docs/security/evidencias-85/complementacao-local-2026-11-12/endpoints.csv), [cobertura-endpoints.csv](https://github.com/AGES-V-Stable/backend/blob/main/docs/security/evidencias-85/complementacao-local-2026-11-12/cobertura-endpoints.csv), [cobertura-requisitos.json](https://github.com/AGES-V-Stable/backend/blob/main/docs/security/evidencias-85/complementacao-local-2026-11-12/cobertura-requisitos.json) e [verificacao.json](https://github.com/AGES-V-Stable/backend/blob/main/docs/security/evidencias-85/complementacao-local-2026-11-12/verificacao.json). Os diretórios anteriores permanecem como histórico.
+
+| ID do caso | Domínio/requisito | Endpoint/componente | Condição e dados sintéticos | Resultado esperado | Resultado obtido | Tipo de evidência/ambiente | Status |
+|---|---|---|---|---|---|---|---|
+| LC-API-01 (59) | Entradas/erros/exposição | 59 operações do inventário MVC | JSON truncado, UUID inválido ou leitura sem corpo | Sem crash/dados internos; entrada inválida em 4xx | Upload com JSON retorna 500; demais 58 casos satisfazem o contrato, OBS85-01 | Teste reproduzido, MockMvc/JWT/PostgreSQL; termos simulados | 58 PASS / 1 FAIL |
+| LC-AUTHZ-01 (54) | BFLA | 18 operações administrativas | OWNER/OPERATOR/VIEWER × operação | Negar função global | 54 respostas 403 | Teste reproduzido, MockMvc/JWT/PostgreSQL | PASS |
+| LC-AUTHZ-02 (6) | Propriedade pessoal | Seis operações KYC/documento/liveness | Id de outro representante e payload válido | 403 sem provedor/mutação | Seis 403, sem provedor e sem alteração de documento | Teste reproduzido, MockMvc/JWT/PostgreSQL | PASS |
+| LC-AUTHZ-03 | Mass assignment | Cadastro público | companyId alheio, ADMIN, accessLevel e compliance aprovado | Não conceder privilégio/empresa alheia | Empresa própria PENDING; nenhum administrador criado | Teste reproduzido, HTTP/serviço/SQL reais | PASS |
+| LC-AUTHZ-04 (2) | BOLA | Duas rotas de cotação | Beneficiário de outra empresa, payload válido | Negar antes do provedor | 404 nas duas, sem Avenia/BlindPay | Teste reproduzido, MockMvc/JWT/PostgreSQL | PASS |
+| LC-FIN-01 (5) | Associação/validade | Confirmação de oferta | Beneficiário alheio/movido; oferta não selecionada, expirada ou margem 10s | Negar antes da execução | 404/422 sem execução/histórico/submissão | Teste reproduzido, MockMvc/JWT/PostgreSQL | PASS |
+| LC-FIN-02 | Propriedades financeiras | Confirmação de oferta | Injeta empresa/beneficiário/usuário/moedas/taxa/provedor/COMPLETED | Preservar dados autorizados | Valores persistidos vêm da oferta/principal; campos extras ignorados | Teste reproduzido, SQL real; processor simulado | PASS |
+| LC-FIN-03 | BOLA | Processor de recotação real | Empresa B aceita recotação da A | Negar sem payout | NotFound; REQUOTE_REQUIRED inalterado | Teste reproduzido, processor/transações/SQL reais | PASS |
+| LC-API-02 (3) | Injeção | Filtro de beneficiários | Tautologia SQL, lookup e script inertes | Não ampliar escopo nem executar conteúdo | Sem registro alheio, dados internos ou perda de tabela | Teste reproduzido, MockMvc/JPA/PostgreSQL | PASS |
+| LC-API-03 | Recursos | Lista de beneficiários | size=2147483647; tabela pequena | Limitar página sem carga | pageSize limitado a 2000 | Teste reproduzido, MockMvc/Spring Data | PASS |
+| LC-ABUSE-01 | Repetição de login | Login | Dez senhas erradas sequenciais | Negar acesso sem token/erro interno/mutação | Dez 401; limitação de taxa avaliada separadamente em OBS85-03 | Teste reproduzido local + inspeção; não mede gateway | PASS |
+| LC-INT-01 (2) | Validade/replay | Webhook | HMAC válido; timestamp ±601s | 401 sem evento/processor | Duas rejeições e zero persistência | Teste reproduzido, verificador/SQL reais | PASS |
+| LC-INT-02 | Duplicidade concorrente | Webhook | Cinco entregas simultâneas do mesmo svix-id | Processar uma vez | Cinco 204; uma linha/chamada ao processor | Teste reproduzido, HMAC/transações/PostgreSQL | PASS |
+| LC-INT-03 | Rollback/retry | Webhook | Processor falha; evento válido repetido | Permitir retry após rollback | Primeira tentativa revertida; segunda processa | Teste reproduzido, transações reais; falha simulada | PASS |
+| LC-CONC-01 | Idempotência/estado | Recotação/processor/conciliação | Uma confirmação e quatro conciliações | Chave estável e um histórico | Uma chave distinta, um histórico, COMPLETED | Teste reproduzido, locks/SQL reais; payout simulado | PASS |
+| LC-CONC-02 | TOCTOU | Processor de payout | Cotação válida; relógio avança 600s durante provisionamento | Não submeter vencida | Chamada de payout após expirar, SEC85-09 | Teste reproduzido, relógio/SQL reais; gateway simulado | FAIL |
+| LC-AUTH-01 | Ciclo de autenticação | Setup/ativação/login/verify-2fa | Segredo novo, challenge, código válido/repetido e reconfiguração sem código | Fluxo válido; negar replay/reconfiguração | Login funciona, replay/reconfiguração negados, segredo cifrado no SQL | Teste reproduzido, HTTP/JWT/TOTP/conversor/SQL | PASS |
+| LC-CONFIG-01 | Configuração/recursos | Spring Security/executor | CORS não confiável, headers, query/cookie sem Bearer | Negar origem/acesso indevidos e limitar executor | nosniff/DENY/no-store, sem JSESSIONID; pool 8/fila 50 | Teste reproduzido, configuração real | PASS |
+| LC-OUT-01 (4) | Respostas externas | Clientes Avenia/BlindPay | JSON ilegível/array | Falha de integração controlada | Quatro rejeições controladas | Teste reproduzido, clientes reais/MockRestServiceServer | PASS |
+| LC-OUT-02 (2) | Redirect/origem | Clientes com builder padrão | 302 para outro servidor local | Não seguir outra origem | Avenia segue; BlindPay não segue, SEC85-10 | Teste reproduzido, dois servidores loopback | 1 PASS / 1 FAIL |
+| LC-OUT-03 (3) | SSRF/path/query | Cliente BlindPay | IDs com URL, travessia ou query | Preservar autoridade/rota | Prefixo preservado e query não injetada | Teste reproduzido, cliente real/MockRestServiceServer | PASS |
+| LC-OUT-04 (4) | Resposta financeira | Adapter BlindPay | Resposta nula; origem nula/zero; destino negativo | Rejeição controlada | Três rejeições; resposta nula causa NPE, OBS85-02 | Teste reproduzido, adapter real/gateway simulado | 3 PASS / 1 FAIL |
+| LC-OUT-05 (2) | Configuração HTTP real | Clientes com builder Spring | 302 entre origens locais | Não seguir outra origem | Confirma Avenia seguindo; BlindPay não segue | Teste reproduzido, contexto real/loopback | 1 PASS / 1 FAIL |
+
+As referências de negócio por operação também incluem os casos **executados** dos controllers e serviços existentes, por exemplo QuoteOrchestratorServiceTest e BlindPayExecutionProcessorTest. Isso aproveita os cenários positivos/negativos de seleção de preço, falha parcial, quantidade fixa, prazo, saldo, financiamento, tarifas, recotação, falha/reembolso e reconciliação. A matriz distingue esses casos do componente dos testes diretos por rota; não afirma que cada caso de serviço passou pela rede HTTP nem que todos os payloads possíveis de cada endpoint foram explorados.
+
+`export-security-coverage.ps1` rejeita operação sem caso LC-API-01 ou componente sem referência executada. Os 15 requisitos de escopo recebem IDs R01–R15 e evidências individuais existentes; resultados FAIL permanecem visíveis. Perfis `seed`/`migration` expõem `/events` em processos separados e não estão ativos na aplicação financeira avaliada; InternalJobSecurityTest/InternalJobControllerTest exercitam seus controles separadamente na regressão. Swagger/documentação automática são configuração auxiliar, não novas operações financeiras dentro das 59 rotas dos controllers.
 
 ## 4. Inventário de endpoints e cobertura
 
@@ -407,6 +449,39 @@ Não se afirma que a BlindPay real emita essa resposta, que um usuário consiga 
 
 **Recomendação:** validar sinal, escala, moeda e coerência de cada parcela de tarifa antes de selecionar/persistir a oferta. Eventuais descontos ou rebates devem ter representação e regra explícitas, em vez de serem aceitos implicitamente como tarifas negativas.
 
+### SEC85-09 — Cotação pode vencer entre a validação e o envio do payout
+
+**Prioridade:** alta para integridade temporal. **Classificação:** [CWE-367](https://cwe.mitre.org/data/definitions/367.html). **Caso:** LC-CONC-02.
+
+**Código no commit da seção 3.5:** `BlindPayExecutionProcessor.acceptRequote` valida a validade e muda o estado para PAYOUT_SUBMITTING. Em `submitPayout`, o processor carrega o contexto, provisiona a carteira e chama `createEvmPayout` sem nova checagem temporal depois do provisionamento.
+
+**Reprodução local segura:** registrar execução sintética, colocá-la em REQUOTE_REQUIRED com cotação válida por cinco minutos, aceitar os valores 100/98 e usar um relógio controlado que avança dez minutos durante `ensureManagedWallet`. O gateway simulado registra uma chamada de payout após a expiração; a asserção esperava zero. O teste não espera dez minutos, não consulta carteiras reais e não envia dinheiro.
+
+**Limite do impacto:** demonstra que o backend tenta submeter uma cotação vencida. O provedor real pode recusá-la; não se comprovou liquidação com preço inválido ou prejuízo. **Recomendação:** checar novamente validade/margem imediatamente antes da submissão, limitar duração do provisionamento e encaminhar cotação vencida ao fluxo de recotação/estado seguro, preservando idempotência.
+
+### SEC85-10 — Cliente Avenia segue redirect para outra origem
+
+**Prioridade:** média, condicionada a resposta/redirecionamento do provedor. **Referência:** OWASP API10:2023; risco relacionado a [CWE-918](https://cwe.mitre.org/data/definitions/918.html), sem comprovar SSRF diretamente controlável por usuário não autenticado. **Casos:** LC-OUT-02 e LC-OUT-05 para Avenia.
+
+**Código no commit da seção 3.5:** `AveniaClient` usa o builder HTTP injetado e não restringe redirects à origem configurada. **Reprodução:** um servidor em 127.0.0.1 devolve 302/Location para outro servidor local em porta distinta. Uma requisição autenticada com credenciais exclusivamente sintéticas chega à segunda origem. LC-OUT-05 repete com o builder real da aplicação Spring, confirmando o comportamento na configuração local avaliada. Os casos equivalentes BlindPay não seguiram o redirect.
+
+**Limites:** os dois destinos são loopback; nenhum serviço de metadata, provedor ou host privado real foi acessado. O teste mede a chegada da requisição, não exfiltração de chave nem comprometimento do provedor. Não se demonstrou controle desse redirect por um usuário comum. **Recomendação:** desabilitar redirects de APIs autenticadas ou validar explicitamente esquema, host e porta a cada salto, protegendo headers de credenciais e aplicando limites de saltos/tempo.
+
+### OBS85-01/02 — Desvios de contrato e robustez, sem exploração de segurança demonstrada
+
+| Observação | Caso e evidência | Resultado e limite | Encaminhamento |
+|---|---|---|---|
+| OBS85-01 | LC-API-01 POST `/v1/blindpay/compliance/documents`; assessment-0094 | JSON em rota multipart resulta em HTTP 500, corpo genérico; deveria ser erro de entrada 4xx. Nenhuma exposição de stack/credencial demonstrada | Tratar media type/multipart inválido explicitamente no handler de erros |
+| OBS85-02 | LC-OUT-04 null-response; assessment-0368 | Resposta nula do gateway causa NullPointerException no adapter de cotação. A orquestração já captura RuntimeException; não foi demonstrado payout, vazamento ou queda global | Normalizar resposta ausente como exceção de integração controlada |
+
+Esses dois FAIL são relevantes ao contrato/consumo seguro de API, mas não são apresentados como duas vulnerabilidades exploráveis nem recebem CWE automaticamente.
+
+### OBS85-03 — Rate limiting local não identificado
+
+**Avaliação executada:** inspeção de SecurityConfiguration, filtros, controllers, dependências Gradle e configuração; não se identificou rate limiter de entrada da aplicação. LC-ABUSE-01 fez somente dez logins errados sequenciais e recebeu dez 401, sem sessão nem erro interno. LC-API-03 e LC-CONFIG-01 confirmaram limites de paginação e pool/fila; TC-API-13 já cobre limites multipart. Timeouts e repetição de saída têm casos próprios.
+
+Não se inventou a regra "bloquear depois de dez tentativas", pois a equipe não definiu esse limiar. A ausência de limitador local é uma observação de configuração e recomendação de defesa, relacionada à [OWASP API4:2023](https://api-security.owasp.org/editions/2023/en/0xa4-unrestricted-resource-consumption/); o teste limitado não prova ausência de proteção AWS nem resistência a DoS. Definir budgets por identidade/origem/fluxo e avaliar a configuração do gateway na etapa autorizada correspondente. Nenhum teste de saturação foi realizado.
+
 ## 7. Revisão dos apontamentos VULN-01 a VULN-11 da #83
 
 | ID anterior | Resultado nesta avaliação | Evidência e limite |
@@ -443,8 +518,12 @@ Pré-requisitos: Java 25 e Docker Desktop em execução; dependências do projet
 # Regressão/build: diagnóstico separado, sem esconder a situação de segurança.
 .\gradlew.bat build --no-daemon --console=plain
 
-# Exporta metadados sanitizados para backend/docs/security/evidencias-85/.
-powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\scripts\export-security-evidence.ps1 -Phase assessment
+# Para uma nova captura completa, preserve os snapshots anteriores em outro diretorio.
+# Execute antes o diagnostico completo, o build e a regressao frontend acima/abaixo.
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\scripts\export-security-evidence.ps1 -Phase assessment -OutputDirectory .\docs\security\evidencias-85\nova-captura
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\scripts\export-security-evidence.ps1 -Phase integration-retest -OutputDirectory .\docs\security\evidencias-85\nova-captura
+Copy-Item .\build\reports\security-assessment\endpoints.csv .\docs\security\evidencias-85\nova-captura\endpoints.csv
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\scripts\export-security-coverage.ps1 -EvidenceDirectory .\docs\security\evidencias-85\nova-captura
 ```
 
 ```powershell
@@ -455,7 +534,7 @@ npm run test:coverage -- --maxWorkers=2 --reporter=default --reporter=junit --ou
 
 O uso de ExecutionPolicy Bypass limita-se ao processo que executa o exportador e não altera a política global do Windows. Esse exportador não faz requisições às APIs.
 
-**Resultado observado no reteste vigente de 12/11:** a tarefa diagnóstica termina com código de saída diferente de zero pelos 16 FAIL documentados na seção 3.4. Não use `ignoreFailures` para apresentar o diagnóstico como aprovado. A tarefa não faz parte de `build/check` nem do PIT; a suíte funcional permanece separada para distinguir regressão e diagnóstico. A integração dos testes corrigidos ao gate deve ser tratada na remediação.
+**Resultado atual, seção 3.5:** a tarefa diagnóstica termina com código de saída diferente de zero pelos 21 FAIL registrados na complementação local. Os 16 FAIL da seção 3.4 são históricos. Não use `ignoreFailures` para apresentar o diagnóstico como aprovado. A tarefa não faz parte de `build/check` nem do PIT; a suíte funcional permanece separada para distinguir regressão e diagnóstico. A integração dos testes corrigidos ao gate deve ser tratada na remediação.
 
 Execuções filtradas sobrescrevem os XMLs daquela tarefa; para regenerar o conjunto completo de evidências, rode a tarefa sem `--tests` antes de exportar. Arquivos exportados de execuções antigas não devem ser confundidos com reteste de uma correção.
 
@@ -474,29 +553,29 @@ Essas conferências pelo responsável ainda **não foram realizadas** e não sã
 ## 9. Limitações e riscos residuais
 
 1. **Camadas simuladas:** mocks não comprovam os contratos atuais, assinaturas aceitas ou efeitos reais das APIs de terceiros. Não houve chamada de negócio à Avenia/BlindPay, AWS ou chatbot.
-2. **Concorrência:** cinco threads/requests e uma interlevação determinística não esgotam condições de corrida. A deduplicação demonstrada é de uma oferta e um disparo local; não é uma prova geral de liquidação única distribuída.
+2. **Concorrência:** plano local executado: cinco confirmações de oferta, cinco entregas do mesmo webhook, confirmação/recotação versus conciliação, consumo TOTP intercalado e expiração entre checagem/submissão. Não é prova formal de liquidação única distribuída, nem execução em múltiplas Lambdas. Na corrida de payout a evidência é a chave estável, não a alegação de uma única chamada HTTP ao provedor.
 3. **Recotação:** fluxo local até COMPLETED reproduzido com transações reais e resposta de payout simulada. Não se afirma que houve liquidação em sandbox ou produção.
 4. **Valores/moedas/tarifas:** a matriz TC-FIN-13–19 cobre casos representativos, fronteiras de centavos/long, sinal de tarifas e persistência fiat/cripto. Os defeitos encontrados são FAIL, não ausência de teste. Novos ativos/regras de arredondamento ou limites de negócio demandam manutenção da matriz; não se afirma cobertura de todas as combinações matematicamente possíveis.
 5. **Imutabilidade:** COMPLETED/FAILED/REFUNDED foram exercitados em confirmação, recotação, start e reconciliação com comparação integral do registro de execução. Isso não é uma proteção contra escrita SQL direta por um administrador de banco nem comprova comportamento interno de terceiros.
 6. **Recuperação/sessão:** recuperação, logout no servidor e troca de senha via endpoint não existem no HEAD. Limpeza do cliente é coberta pelo Vitest; a alteração de senha foi simulada no banco isolado e demonstrou sessão antiga ainda aceita. A lacuna de revogação está registrada em SEC85-06.
 7. **Uploads:** serviço e limites reais do parser HTTP exercitados. Antivírus, PDFs ativos e documentos pessoais não foram usados; o teste de documento truncado não comprova execução de conteúdo malicioso.
-8. **SSRF/injeção/abuso:** teste de UUID, escaping de path e revisão de origens não constituem exploração completa de toda a superfície. Nenhum stress/DoS foi feito; ausência de rate limiter no código não prova ausência de qualquer controle externo.
+8. **SSRF/injeção/abuso:** UUID, filtros, autoridade/path de cliente, redirects com builder real, erros por operação, paginação, pool/fila e repetição limitada foram executados. Avenia seguiu redirect entre origens, SEC85-10. A revisão dos sinks não identificou fetch genérico de URL escolhida pelo usuário nos serviços examinados; não se declara ausência universal de SSRF/XSS/injeção. Nenhum stress/DoS foi feito; ausência de rate limiter local não prova ausência de controle externo. OBS85-03 registra a avaliação e a necessidade de política de limitação.
 9. **Ignorados preexistentes:** `OnboardingIntegrationTest` possui dois casos desabilitados e `TransactionQueryIntegrationTest` quatro. Isso é configuração `@Disabled`, não falha do Docker nesta execução. Casos novos cobrem cadastro e isolamento do histórico, sem alegar reativação ou equivalência integral aos seis ignorados.
-10. **Publicação:** nada foi publicado no GitHub, nenhuma correção de produção foi aplicada e nenhum achado foi marcado como remediado.
+10. **Funcionalidades futuras/publicação:** cadastro/convite/gestão de operadores está em desenvolvimento segundo a equipe. As permissões existentes foram testadas por vínculos sintéticos, sem alegar execução desse fluxo futuro. Esta complementação não fez commit/push/PR nem correção de produção e não marcou achados como remediados; não altera o histórico de publicação que a equipe já tenha realizado.
 
 Os itens parciais das tabelas não recebem automaticamente CWE: ausência de funcionalidade, cobertura incompleta e limitação de ambiente não demonstram por si só uma fraqueza explorável. As fragilidades confirmadas têm classificação, evidência e reprodução na seção 6.
 
 ## 10. Checklist do DoD da #85
 
-As caixas abaixo refletem o **escopo integral da issue**, não apenas a existência de alguns testes locais. Itens parciais permanecem abertos: inventariar todas as rotas e testar login não comprova cobertura completa de autorização, validação e abuso em cada operação. Falha de um controle não impede concluir sua avaliação; cobertura insuficiente impede afirmar que todo o requisito foi avaliado. A recuperação e o webhook Avenia ausentes estão registrados como limitações, sem implementação nesta issue de testes.
+As caixas refletem o plano finito de avaliação vinculado aos requisitos R01–R15 (seção 3.5 e cobertura-requisitos.json), incluindo testes diretos, casos de negócio existentes reexecutados e inspeção onde o controle é de configuração. As lacunas locais genéricas anteriormente listadas foram substituídas por casos executados e evidências; controles ausentes/reprovados ficam como achados/observações, não como testes por fazer. Isso não significa cobertura de todos os payloads imagináveis nem aprovação dos controles. A integração externa continua pendente do sandbox acordado; funcionalidades ainda inexistentes ficam explicitamente não avaliadas.
 
-- [ ] **Autenticação, autorização, sessão e isolamento entre empresas — parcial.** Casos locais dos três perfis empresariais e da conta Admin executados, mas sem matriz completa de autorização por objeto/propriedade em todas as operações. Não se exige equivalência entre OWNER/OPERATOR/VIEWER; a cobertura integral de cada perfil e do acesso administrativo ainda não foi demonstrada.
-- [ ] **Endpoints e APIs do escopo — parcial.** Inventário e barreiras de autenticação executados; falta comprovar os demais controles aplicáveis por endpoint.
-- [ ] **Fluxos de negócio e controles contra abuso — parcial.** Há casos sintéticos de cadastro, perfis, repetição e confirmação; avaliação de rate limiting/consumo de recursos e demais fluxos permanece limitada.
-- [ ] **Integridade financeira — parcial.** Casos representativos de valores, moedas, precisão, taxas, cotações e persistência executados; cobertura integral das associações e combinações relevantes não demonstrada.
-- [ ] **Idempotência, concorrência, condições de corrida e transições — parcial.** Cinco confirmações concorrentes, concorrência de TOTP e estados terminais avaliados; outros pontos de TOCTOU e sincronização permanecem sem cobertura demonstrada.
-- [ ] **Integrações e webhooks — parcial.** Testes locais com provedores simulados executados. Sandboxes oficiais ainda não exercitados nesta avaliação; receptor Avenia ausente e demais limites nas seções 5.5 e 9.
+- [x] **Autenticação, autorização, sessão e isolamento avaliados no plano local.** R01/R02/R07: ciclo 2FA completo, JWT, sessão/revogação, três perfis × rotas administrativas, seis operações de KYC por propriedade, duas rotas de cotação, recursos financeiros e mass assignment; regressões de vínculo e frontend reexecutadas. Recuperação/logout ausentes registrados, sem inventar execução.
+- [x] **Endpoints/APIs locais submetidos aos casos documentados do plano.** R03/R13: 59 operações com entrada/erro por rota, barreiras de acesso aplicáveis e referências executadas aos controllers/serviços de negócio; matriz verificável em cobertura-endpoints.csv. Validação, exposição, contrato e limites têm PASS/FAIL próprios.
+- [x] **Fluxos existentes e controles contra abuso avaliados com dados sintéticos.** R04/R05/R08/R13: cadastro, empresas, representantes, compliance, beneficiários, cotações, transferências, repetição, validação, paginação, pool/fila e uploads; ausência de limiter local registrada em OBS85-03. Convite/cadastro de operadores ainda indisponível, fora da execução até sua entrega.
+- [x] **Integridade financeira avaliada pela matriz finita.** R06/R07: valores negativos/zero/precisão/overflow/moedas/rotas/tarifas, validade/margem, oferta selecionada, empresa-beneficiário-cotação-execução, propriedades protegidas e persistência. Perda de precisão/tarifa negativa permanecem FAIL. Os testes não exigem explorar infinitas combinações monetárias.
+- [x] **Idempotência, concorrência, TOCTOU e estados avaliados localmente.** R08/R09/R10: confirmação concorrente, webhook duplicado, recotação versus conciliação, TOTP e relógio controlado; regressão da máquina de estados, falha/reembolso/retries e imutabilidade terminal. SEC85-09 registra a falha encontrada; liquidação distribuída real não foi simulada como prova de produção.
+- [ ] **Integrações e webhooks — etapa externa pendente.** R11/R12/R14 avaliados localmente: assinaturas, autenticidade, timestamps, duplicidade concorrente, rollback/retry, ordem, instância/empresa, contratos, erros, timeouts, retries e redirects. Falta executar os sandboxes oficiais com credenciais/massa autorizadas. Receptor Avenia ausente; nenhuma integração inexistente foi implementada nesta avaliação.
 - [x] **Resultados, evidências e limitações registrados para cada caso executado.** Seções 3–5 e arquivos JSON sanitizados; casos individuais da regressão e do diagnóstico enumerados.
 - [x] **Vulnerabilidades reproduzíveis registradas com passos seguros.** Seções 6 e 8; sem movimentação real nem exposição de segredos.
 
-A avaliação local e a revisão da matriz estão documentadas; isso não conclui integralmente a #85. O responsável deve revisar os itens parciais antes de encerrar a issue. Corrigir os achados e comprovar sua remediação pertence à etapa de correção/reteste; não é condição para registrar que um teste encontrou uma falha.
+A complementação local prevista na seção 3.5 foi executada e documentada. O encerramento integral da #85 depende da etapa externa acordada e da decisão explícita sobre funcionalidades indisponíveis; não se apresenta sandbox ou fluxo futuro como testado. Corrigir os achados e comprovar sua remediação pertence à etapa de correção/reteste, separada desta entrega de avaliação.
