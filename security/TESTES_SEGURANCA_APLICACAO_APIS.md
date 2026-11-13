@@ -5,10 +5,10 @@
 **Planejamento de referência:** [Relatório da #83](PLANEJAMENTO_E_RECONHECIMENTO_TECNICO.md)  
 **Data:** 10/11/2026  
 **Revisão da regra de acesso:** 12/11/2026 — OWNER (Representante), OPERATOR (Operador) e VIEWER (somente leitura) são perfis empresariais; Admin é uma conta separada da V-Stable; decisões de compliance exclusivas das APIs dos provedores.
-**Condição:** capturas locais com entidades sintéticas e integrações simuladas; complementação BlindPay Development em 13/11/2026, separada na seção 3.6. Avenia real e recebimento externo de webhooks não executados.
+**Condição:** capturas locais com entidades sintéticas e integrações simuladas; complementações reais BlindPay Development (seção 3.6) e Avenia sandbox (seções 3.8 e 5.7) em 13/11/2026. Recebimento externo de webhooks não executado.
 **Situação:** avaliação local complementada em 12/11 e instrumentação revisada após o review do PR em 13/11 (seção 3.7). Alguns testes anteriores contradiziam o comportamento seguro ou duplicavam verificações; seus totais são históricos e não comprovam capacidade de verificar uma remediação. Permanecem limitações de cobertura explícitas na matriz e nas seções 9 e 10. Não representa aprovação de segurança nem certificação.
 
-**Complementação externa em 13/11:** suíte BlindPay Development concluída na seção 3.6: 77 subcasos, 60 PASS, 14 FAIL relativos a dois achados, um bloqueio de cadastro externo e duas exclusões. Avenia real e recebimento de webhook real permanecem pendentes. O fluxo de convites está fora desta etapa, mesmo havendo código correspondente no HEAD mais recente.
+**Complementação externa em 13/11:** BlindPay Development na seção 3.6: 77 subcasos, 60 PASS, 14 FAIL relativos a dois achados, um bloqueio de cadastro externo e duas exclusões. Avenia sandbox nas seções 3.8 e 5.7: 26 IDs, 22 PASS, três FAIL e um grupo de webhooks NÃO EXECUTADO; 40 chamadas reais e dois tickets PAID. Permanecem as limitações da seção 9.1 e o recebimento de webhook real. O fluxo de convites está fora destas etapas, mesmo havendo código correspondente no HEAD mais recente.
 
 ## 1. Resumo executivo
 
@@ -17,6 +17,8 @@ Os testes locais reproduziram oito grupos de fragilidades: confirmação de ofer
 Também foram observados controles efetivos nos cenários executados: rejeição de JWT inválido/expirado e de challengeToken em rotas protegidas, bloqueio de usuários empresariais nas rotas administrativas, isolamento de recursos de empresas diferentes, rejeição de oferta expirada ou valores adulterados, unicidade de uma execução sob cinco confirmações concorrentes e autenticação/deduplicação de webhooks BlindPay.
 
 A complementação externa da BlindPay concluiu os oito cenários funcionais de sucesso, falha/reembolso de payin e payout, expiração, recotação e idempotência. Reproduziu SEC85-01 com conta de TOTP ativo e identificou SEC85-11, tarifa em token persistida como BRL sem conversão. Foram 80 chamadas na tentativa completa, 123 confirmadas na campanha e 139 posições no orçamento conservador com reserva pela interrupção, abaixo do teto 180. Esses números são independentes dos 385 casos da captura local de 12/11.
+
+A complementação Avenia confirmou em sandbox SEC85-01 (confirmação sem TOTP financeiro) e SEC85-07 (1,123456 USDC na execução versus 1,12 no histórico). Também registrou o estado local SUBMITTED após PAID no provedor como falha operacional de acompanhamento, sem exploração demonstrada. A confirmação repetida devolveu a mesma execução sem nova chamada externa. Os resultados, recomendações, recursos criados e reprodução estão integrados às seções correspondentes deste relatório.
 
 | Execução | Casos | PASS | FAIL | Ignorados |
 |---|---:|---:|---:|---:|
@@ -28,6 +30,7 @@ A complementação externa da BlindPay concluiu os oito cenários funcionais de 
 | Complementação local de 12/11, antes da revisão da instrumentação | 385 | 364 | 21 | 0 |
 | Regressão do backend no commit atualizado, em 12/11 | 1.241 | 1.235 | 0 | 6 |
 | Revisão da suíte local do PR em 13/11, branch test/85-seguranca-aplicacao-apis | 371 | 344 | 27 | 0 |
+| Regressão final da etapa Avenia em 13/11, APIs reais desativadas | 1.522 | 1.516 | 0 | 6 |
 
 Os 19 FAIL da captura de 10/11 incluem cinco reprovações baseadas na matriz administrativa substituída. A captura de 228 casos foi sucedida pela complementação de 385 casos e pela revisão de 371 casos da seção 3.7. **Falhas de casos não equivalem a vulnerabilidades independentes.** Dos 21 FAIL de 12/11, 16 reproduzem os grupos SEC85-01–08, três correspondem a SEC85-09/10 e dois são desvios OBS85-01/02. Na revisão do PR há seis reprovações adicionais: dois cenários de TOTP ausente com 2FA ativo e quatro de erro monetário não controlado (OBS85-04). A diferença não representa seis vulnerabilidades novas nem alteração de produção. Os snapshots anteriores foram preservados.
 
@@ -235,6 +238,73 @@ Correções da instrumentação:
 
 Artefatos desta revisão: `backend/docs/security/evidencias-85/revisao-pr-2026-11-13/`, incluindo `assessment.json`, `integration-retest.json`, inventários, matrizes, `validacao-evidencias.json`, `verificacao.json` e `REVISAO.md`. São uma captura nova; os JSON/CSV de 12/11 permanecem históricos. O build/regressão e a validação dos exportadores são registrados nessa captura. Frontend e sandbox não são reexecutados por esta revisão.
 
+### 3.8. Complementação Avenia sandbox — 13/11/2026
+
+Em **13/11/2026**, foram executadas **40 chamadas HTTP reais** à Avenia sandbox, dentro do teto de 50. Houve **dois tickets de teste pagos pelo simulador**: um na conta principal, com saída INTERNAL para a própria conta, e outro na subconta sintética, pela aplicação local, com saída USDC/POLYGON. Nenhum PIX foi pago em aplicativo bancário, nem houve envio de ativos reais.
+
+A consolidação contém **26 IDs: 22 PASS, 3 FAIL e 1 NÃO EXECUTADO**. Isso corresponde a 25 subcasos avaliados e um grupo de webhooks não executado; não significa cobertura integral da issue. Estados financeiros de falha/cancelamento, recuperação de resultado incerto e outros limites abaixo não estão incluídos como testes aprovados.
+
+Os três FAIL finais são:
+
+- **TC-SBX-AV-05.2 / SEC85-01:** a confirmação HTTP da oferta criou um ticket real de sandbox sem TOTP da transferência, com usuário sintético cujo TOTP estava ativo e que havia feito login com senha e segundo fator. A rota direta, em contraste, recusou a ausência do fator com HTTP 422 e zero chamadas externas.
+- **TC-SBX-AV-03.4 / SEC85-07:** a execução preservou **1,123456 USDC**, mas o histórico armazenou **1,12 USDC**. Ambos os valores são massa de teste, originados no fluxo com provedor real.
+- **TC-SBX-AV-06.3 / apontamento anterior VULN-11:** o ticket chegou a `PAID`, enquanto o GET local permaneceu em `SUBMITTED`. É uma observação operacional de acompanhamento, não uma exploração de segurança demonstrada. Os agendamentos estavam desativados para controlar o orçamento; além disso, a inspeção do HEAD mostra que o reconciliador existente filtra `BLINDPAY`, e não existe receptor Avenia. Portanto, não se atribui o resultado apenas à configuração do teste, nem se afirma ter validado um reconciliador Avenia habilitado.
+
+Nenhuma vulnerabilidade foi corrigida nesta entrega. Os achados locais anteriores não são apresentados como novos achados independentes.
+
+#### Versão, ambiente e autorização
+
+| Item | Condição avaliada |
+|---|---|
+| Repositório | AGES-V-Stable/backend |
+| Branch | `test/85-seguranca-avenia-sandbox` |
+| HEAD base | `1a3add10ab0032b9834ff552e9af74a14cd859d8` |
+| Código executado | HEAD acima mais instrumentação de teste não commitada; hashes por tentativa em `runner.json` |
+| Aplicação | Spring Boot local, servidor HTTP em loopback e porta aleatória |
+| Banco | PostgreSQL `16.4` efêmero, criado e descartado por Testcontainers |
+| Ferramentas | Java Temurin `25.0.3`, Gradle Wrapper `9.7.1`, Docker `29.8.0` |
+| Único destino de negócio externo | `https://api.sandbox.avenia.io:10952` |
+| Credenciais | Novas chaves em `.env.avenia-security/`, ignoradas pelo Git; conta esperada confirmada |
+| Conta do provedor | INDIVIDUAL; não equivale a KYB institucional/produção |
+| Outras integrações | BlindPay e assistente simulados; verificadas sem interações; nenhum acesso AWS |
+| Execução | Sequencial, sem fuzzing, carga, concorrência ou falhas de transporte induzidas |
+
+O prompt do responsável autorizou especificamente essas chamadas funcionais como exceção às instruções gerais de testes simulados do `AGENTS.md`. Aplicam-se o planejamento da #83 e seus critérios de parada. Não houve alteração de chaves, permissões, destinos de webhook, configuração compartilhada, código de produção ou migrations.
+
+O transporte de teste injeta timeout, bloqueio de redirects e allowlist de origem/método/path. Isso protege a execução e **não comprova que o builder HTTP padrão da aplicação tenha esses mesmos controles**; o achado anterior sobre redirects não foi marcado como corrigido.
+
+#### Evidências e tentativas preservadas
+
+Diretório: [evidencias-85-avenia-sandbox/2026-11-13](https://github.com/AGES-V-Stable/backend/blob/test/85-seguranca-avenia-sandbox/docs/security/evidencias-85-avenia-sandbox/2026-11-13/).
+
+- [`summary.json`](https://github.com/AGES-V-Stable/backend/blob/test/85-seguranca-avenia-sandbox/docs/security/evidencias-85-avenia-sandbox/2026-11-13/summary.json): última observação de cada ID, origem da captura e totais; não soma os retestes como novos casos independentes.
+- `assessment.json` em cada tentativa: esperado, observado, camada, detalhes permitidos, status, chamadas e horários UTC.
+- `runner.json`: branch, HEAD, hashes dos arquivos e encerramento efetivo do Gradle. As revisões da instrumentação têm hashes diferentes; não são uma única captura imutável.
+- `validation.json`: resultado da regressão, sanitização e verificação final, quando concluídas.
+
+| Tentativa | HTTP reais | Estado da avaliação | Saída Gradle | Interpretação |
+|---|---:|---|---:|---|
+| `av85-preflight-01-preflight` | 5 | FINISHED | 0 | Conta, metadados, limites e ausência de callbacks |
+| `av85-assessment-01-assessment` | 13 | FINISHED | 1 | Contratos e primeiro ticket PAID; caso local com payload incompleto refeito depois |
+| `av85-business-01-business` | 4 | INTERRUPTED | 1 | Preparação do beneficiário rejeitada com HTTP 400; nenhum ticket empresarial enviado |
+| `av85-business-02-business` | 5 | FINISHED | 0 | Beneficiário GNOSIS criado; cotação externa HTTP 500, oferta local HTTP 422; cenários dependentes bloqueados |
+| `av85-business-03-business` | 13 | FINISHED | 1 | Alternativa POLYGON funcional, segundo ticket PAID, três asserções finais FAIL |
+| **Total desta avaliação** | **40** | **Processos encerrados** | — | **Sem `ignoreFailures`** |
+
+As duas consultas GET anteriores de validação das novas chaves são históricas e **não estão somadas às 40 chamadas**. Incluindo-as, são 42 chamadas conhecidas. Não houve 429 ou resultado financeiro desconhecido. Um 500 foi observado, sem persistência na rota alternativa; a parada global estava configurada para o segundo 5xx.
+
+O primeiro `TC-SBX-AV-02.1` retornou 400, não o 404 esperado. O corpo de teste foi ajustado para fornecer os campos conforme o DTO, inclusive valor numérico e `coverFees`; o reteste retornou 404. O FAIL original foi preservado como falha de instrumentação e não contado como vulnerabilidade.
+
+O primeiro payload de carteira incluía `isSameEconomicGroup=false` para país BR. A documentação orienta omitir o campo nessa condição; o payload ajustado foi aceito. A mensagem sanitizada da primeira rejeição não foi capturada, portanto a causa exata daquele 400 não foi demonstrada. Não se classifica essa tentativa como defeito confirmado do produto.
+
+Na primeira captura de `01.2`, apenas o sucesso HTTP ficou evidenciado; as flags não foram extraídas pelo formato inicialmente esperado. `01.6` complementou a leitura por allowlist e comprovou as permissões operacionais. Não se inferem permissões a partir do HTTP 200 isolado.
+
+#### Fontes e metodologia Avenia
+
+Consultadas em 13/11/2026: [início e ambientes](https://integration-guide.avenia.io/docs/Getting-Started/gettingStarted/), [primeira operação](https://integration-guide.avenia.io/docs/Getting-Started/firstOperation/), [operações suportadas](https://integration-guide.avenia.io/docs/Operations/combinations/), [metadados e limites](https://integration-guide.avenia.io/docs/Avenia-Account-Management/aboutLogin/), [subcontas](https://integration-guide.avenia.io/docs/Avenia%20Subaccounts/subAccountManagement/), [carteiras](https://integration-guide.avenia.io/docs/Beneficiaries-Wallets/walletsGuide/), [recebimento simulado](https://integration-guide.avenia.io/docs/Sandbox%20Usecases/receiveMockFunds/), [gestão de webhooks](https://integration-guide.avenia.io/docs/Webhooks/webhookManagement/) e [comportamento dos eventos](https://integration-guide.avenia.io/docs/Concepts/webhooksInPractice/).
+
+O MCP documental Avenia não estava configurado nesta sessão; foram usados guias oficiais, sem instalar MCP de negócio ou enviar segredos. OWASP WSTG 4.2, ASVS 5.0.0, API Top 10:2023 e NIST SP 800-115 orientam os requisitos e a rastreabilidade. Não se declara conformidade integral. Nenhum dado de cartão foi processado e não foi demonstrada aplicabilidade PCI DSS nesta etapa.
+
 ## 4. Inventário de endpoints e cobertura
 
 Na captura local de 12/11 foram identificadas **59 combinações de método e caminho** nos controllers ativos: quatro públicas e 55 protegidas por autenticação; 18 com autorização administrativa por `@PreAuthorize`. Esses números são históricos. O HEAD da complementação de 13/11 contém 71 operações, incluindo a nova rota pública de cadastro de conta; a revalidação local e a atualização de sua classificação são registradas na seção 3.6, sem atribuir a captura antiga ao código novo.
@@ -368,6 +438,41 @@ As condições locais da seção 3.2 aplicam-se às tabelas históricas TC-AUTH/
 Os grupos TC-SBX-BP-01–04 são detalhados no relatório complementar e nos registros individuais da tentativa completa. Autenticação da integração, associação de recursos e isolamento por HTTP local, cotação SOURCE/TARGET com centavos/validade/tarifas e máquina de estados real são separados em subcasos PASS/FAIL/BLOQUEADO/NÃO EXECUTADO. Não se aprova um grupo inteiro apenas porque uma chamada passou. Falha/reembolso provocado no sandbox pode representar PASS do tratamento da aplicação.
 
 A confirmação utiliza conta local com TOTP ativo e sessão emitida após challenge válido; a requisição de transferência omite TOTP. O isolamento é exercitado com empresa B acessando o beneficiário e as ofertas de A, medindo a ausência de chamadas externas na rejeição. Polling não equivale a entrega de webhook. Expiração durante financiamento é provocada exclusivamente no banco efêmero e assim identificada.
+
+### 5.7. Casos de sandbox Avenia
+
+As pré-condições comuns são a conta esperada, chaves novas, orçamento disponível e transporte restrito. Os casos HTTP locais usam empresas e representantes OWNER sintéticos A/B com login real e TOTP ativo. Não reavaliam integralmente OPERATOR/VIEWER/Admin ou convites. Quando os registros financeiros iniciais são fixtures locais, isso está declarado no JSON; não são apresentados como operações remotas.
+
+| ID TC-SBX-AV | Requisito / esperado | Observado e camada | Resultado final |
+|---|---|---|---|
+| 01.1 | Assinatura RSA e conta correta | GET real pelo transporte/signer do cliente; conta confirmada | PASS |
+| 01.2 | Consultar acesso sem expor dados | Consulta autenticada; interpretação das flags complementada em 01.6 | PASS limitado |
+| 01.3 | Conhecer liberações | BRL/USD liberados; demais flags restritas no JSON; não prova KYB | PASS |
+| 01.4 | Verificar bloqueio e limites | Conta não bloqueada; valores da conta omitidos | PASS |
+| 01.5 | Evitar callbacks fora do escopo | Lista de destinos vazia, preservada | PASS |
+| 01.6 | Confirmar permissões antes da escrita | Flags operacionais conhecidas e conta novamente confirmada | PASS |
+| 02.1 | B não cota beneficiário de A | 404 e zero chamadas externas; fixture local | PASS após reteste |
+| 02.2 | B não confirma oferta de A | 404 e zero chamadas externas; fixture local | PASS |
+| 02.3 | B não consulta execução de A | 404 e zero chamadas externas; fixture local | PASS |
+| 02.4 | Criar subconta própria | Cliente real retornou 201; BRL liberado sem submissão KYC | PASS |
+| 02.5 | Preservar vínculos após negativas | SQL confirmou empresa proprietária; nenhum efeito remoto | PASS |
+| 02.6 | Vincular carteira remota à empresa A | Carteira própria na subconta correta; vínculo local, KYC PENDING | PASS |
+| 02.7 | Impedir uso da carteira remota por B | HTTP 404 antes da Avenia | PASS |
+| 02.8 | Impedir confirmação por B da oferta real de A | HTTP 404, sem novo efeito remoto | PASS |
+| 03.1 | Cotação com origem fixa | 10 BRL preservados; saída USDC, DTO tipado, tarifas exportadas por moeda | PASS |
+| 03.2 | Cotação com destino fixo e precisão | 1,123456 USDC preservados; tarifas observadas sem somar moedas diferentes | PASS |
+| 03.3 | Oferta real e persistência | HTTP local, agregador e provider_quotes preservaram 1,123456 USDC; origem confirmada 6,71 BRL | PASS após bloqueio GNOSIS |
+| 03.4 | Histórico preservar precisão da execução | 1,12345600 USDC versus 1,12 USDC | **FAIL — SEC85-07** |
+| 04.1 | Criar e acompanhar ticket de simulação | Conta principal, PIX → USDC INTERNAL; PROCESSING → PAID | PASS |
+| 04.2 | Executar oferta na subconta e consultar status | PIX → USDC POLYGON, PAID; sem atualizar banco artificialmente | PASS |
+| 05.1 | Rota direta exigir TOTP financeiro | HTTP 422 sem fator e sem chamada externa | PASS |
+| 05.2 | Confirmação de oferta também exigir fator | HTTP 200 e ticket criado sem TOTP financeiro | **FAIL — SEC85-01** |
+| 06.1 | Repetir confirmação sem novo efeito | Mesma execução, um registro e zero chamadas adicionais | PASS |
+| 06.2 | Ticket terminal permanecer estável | Segunda consulta ao primeiro ticket manteve PAID | PASS limitado à leitura |
+| 06.3 | Refletir liquidação no estado local | Provedor PAID versus API local SUBMITTED | **FAIL operacional / limitação de acompanhamento** |
+| 08.1 | Receber e autenticar eventos reais | Receptor Avenia e destino público próprio ausentes; nenhum túnel | **NÃO EXECUTADO** |
+
+Cada linha tem sua captura individual em `summary.json`. A numeração 08 preserva o grupo de webhooks solicitado; não existem grupos executados 07 ou novos testes inferidos dos números.
 
 ## 6. Achados reproduzíveis e recomendações
 
@@ -560,6 +665,28 @@ No exemplo sintético recuperado, a tarifa de 15,10 USDB foi persistida como `se
 
 **Recomendação:** preservar a moeda de cada tarifa, distinguir cobranças por operação de parcelas faturadas posteriormente e converter explicitamente com regra de câmbio/arredondamento definida antes de persistir em campos BRL. Nenhuma correção de produção foi realizada.
 
+### Complementação dos achados com evidência Avenia sandbox
+
+#### TOTP financeiro ausente na confirmação — SEC85-01
+
+Reprodução segura: preparar usuário local com TOTP ativo e autenticação real, obter oferta própria pela API e chamar `POST /v1/quotes/offers/{OWN_OFFER}/confirm` apenas com os montantes confirmados. O ticket de sandbox foi criado. Repetir a mesma confirmação não criou outro efeito, mas esse controle não substitui o segundo fator.
+
+Referências do código avaliado: [TransferExecutionController](https://github.com/AGES-V-Stable/backend/blob/test/85-seguranca-avenia-sandbox/src/main/java/ages/vstable/backend/controller/TransferExecutionController.java), [TransferExecutionService](https://github.com/AGES-V-Stable/backend/blob/test/85-seguranca-avenia-sandbox/src/main/java/ages/vstable/backend/service/transfer/TransferExecutionService.java) e `TransferService.createConfirmedOffer`, que não valida o fator como `TransferService.create`.
+
+Correção recomendada: exigir e validar o fator financeiro em todos os caminhos que podem submeter a transferência, com consumo/replay e concorrência tratados de forma compartilhada e atômica. Classificação herdada: CWE-287, OWASP API2/API6:2023. A eficácia da correção exige reteste separado.
+
+#### Precisão do histórico — SEC85-07
+
+Reprodução segura: confirmar uma oferta de destino sintético 1,123456 USDC e comparar `transfer_executions.target_amount` com `base_transactions.foreign_amount`. A primeira coluna preservou seis casas úteis; a segunda possui escala 2 em [BaseTransactionEntity](https://github.com/AGES-V-Stable/backend/blob/test/85-seguranca-avenia-sandbox/src/main/java/ages/vstable/backend/entity/BaseTransactionEntity.java).
+
+Correção recomendada: definir precisão por ativo e preservar os montantes efetivos em todo o histórico e na execução; revisar schema, DTOs e arredondamento em remediação própria. Não arredondar cripto como fiat. Relação com CWE-197/CWE-682; o teste não demonstrou desvio de dinheiro real.
+
+#### Acompanhamento Avenia ausente — VULN-11 da #83
+
+O polling do teste comprovou o estado PAID, mas não conciliou a aplicação. `TransferExecutionReconciler` seleciona apenas BLINDPAY; `TransferService` documenta que persiste somente o snapshot da criação. Não há receptor Avenia nos controllers deste HEAD.
+
+Recomendação: implementar acompanhamento autorizado por consulta ou webhook autenticado, com validação de propriedade, deduplicação, ordenação e transições válidas. Tratar estados incertos consultando a operação original; `externalId` não é uma garantia de idempotência da Avenia. Essa ausência funcional não foi convertida automaticamente em CWE ou exploração comprovada.
+
 ## 7. Revisão dos apontamentos VULN-01 a VULN-11 da #83
 
 | ID anterior | Resultado nesta avaliação | Evidência e limite |
@@ -627,6 +754,46 @@ Com Docker/Java 25 e `BLINDPAY_API_KEY`/`BLINDPAY_INSTANCE_ID` já carregadas co
 
 O script usa a tarefa manual `blindpaySecuritySandboxTest`, prepara segredos exclusivos da aplicação efêmera e escolhe diretório novo. Não inserir credenciais ou IDs externos no comando, relatório ou versionamento. As variáveis opcionais `BLINDPAY_SANDBOX_CUSTOMER_ID` e `BLINDPAY_SANDBOX_BANK_ACCOUNT_ID` não são requisitos da preparação específica desta avaliação; o executor verifica a massa de demonstração e cria conta própria. A tarefa antiga `blindpaySandboxTest` conserva seus requisitos originais e não foi executada integralmente por engano. Procedimento completo e limitações no relatório complementar do backend.
 
+### 8.1.2. Reprodução específica do sandbox Avenia
+
+Arquivos de instrumentação adicionados:
+
+| Arquivo | Finalidade |
+|---|---|
+| `AveniaSandboxPreflightTest.java` | Consultas iniciais de conta, acesso, metadados, limites e callbacks |
+| `AveniaSecuritySandboxTest.java` | Aplicação HTTP local, banco efêmero, isolamento A/B, cotações e tickets reais |
+| `AveniaSandboxSession.java` | Fronteira de rede, orçamento, assinatura pelo cliente existente e checkpoints sanitizados |
+| `AveniaSandboxBoundaryTest.java` | Contraprovas locais para destino, extração de flags e classificação sanitizada de erros |
+| `scripts/test-avenia-security-sandbox.ps1` | Segredos exclusivos do processo, execução manual, hashes e bloqueio de reenvio |
+| `build.gradle` | Tarefa opt-in e exclusão explícita das suítes padrão/PIT |
+| Relatório, JSONs e atualização da wiki | Resultados rastreáveis, condições, recomendações e limitações |
+
+Pré-requisitos: Java 25, Docker funcionando, novas chaves locais protegidas pelo Git e acesso autorizado à conta sandbox esperada. Não configurar MFA novamente para chamadas assinadas.
+
+Na branch de testes, em `backend/`, para **uma nova campanha explicitamente escolhida**:
+
+```powershell
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File scripts/test-avenia-security-sandbox.ps1 -Phase preflight -Campaign revisao-20261114
+# Conferir o preflight antes de prosseguir.
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File scripts/test-avenia-security-sandbox.ps1 -Phase assessment -Campaign revisao-20261114
+```
+
+Os comandos criam recursos novos de teste. Não executar novamente para apenas visualizar resultados; abrir os JSONs e este relatório. A campanha `initial` contém esta captura e bloqueia reenvios. `business` é uma continuação controlada usada na investigação, com recuperação explícita da subconta própria; não é necessária no fluxo final normal. O teto é 50 chamadas por campanha e os limites de tempo são 5 minutos para preflight e 15 para cada etapa posterior. Iniciar outra campanha não é autorização para ignorar operações anteriores incertas.
+
+A tarefa `aveniaSecuritySandboxTest` exige opt-in e está excluída de `test`, `build`, CI padrão e PIT. O executor gera segredos próprios para JWT/TOTP/convites no processo, sem usar os compartilhados. Logs brutos e JUnit permanecem em `build/` ignorado e não foram exportados como evidência. As revisões finais do runner foram verificadas localmente; não se repetiram as operações remotas apenas para atualizar hashes.
+
+Validação sem APIs reais: `gradlew.bat build --no-daemon --max-workers=1 --console=plain`, com opt-in falso, chaves vazias e bases de provedores em loopback. **Saída 0: 1.522 casos em 119 suítes, 1.516 PASS, zero falhas/erros e 6 ignorados.** Inclui os três testes locais da fronteira de sandbox/sanitização. Os testes externos são excluídos por tag, não contados como aprovações da regressão. Resultado e hashes em `validation.json`. A sintaxe PowerShell e a recusa de reenvio de campanha já executada também passaram, sem chamadas HTTP.
+
+A conferência posterior das duas cotações sanitizadas também verificou tarifas não negativas, todas em BRL, soma menor que a entrada e resíduo de arredondamento até um centavo de BRL entre entrada líquida e destino × preço. Os detalhes estão em `validation.json`. É análise das respostas capturadas, sem chamada adicional, e não valida todos os cálculos defensivos do backend ou todas as moedas.
+
+#### Recursos e recuperação Avenia
+
+Foram deixados **uma subconta INDIVIDUAL própria, duas carteiras beneficiárias próprias (GNOSIS/POLYGON) e dois tickets PAID**. As carteiras usam endereços aleatórios não financiados. Nenhuma subconta/carteira preexistente da equipe foi modificada ou excluída. Subcontas são permanentes segundo a documentação do provedor.
+
+IDs e referências para recuperação estão exclusivamente em `.env.avenia-security/assessment-resources-*.json`, `business-resources-*.json`, `assessment-ticket-*.json` e `business-ticket-*.json`, ignorados pelo Git. A versão final também grava intenções privadas antes de POSTs. Não publicar essa pasta. Os JSONs versionados usam aliases e não permitem ao revisor recuperar identificadores sensíveis.
+
+O executor preserva tentativas anteriores, limita chamadas/polling e bloqueia reenvio após escrita cujo resultado não foi recebido. Após queda, revisar `RUNNING`/`INTERRUPTED`, os registros privados e o provedor antes de iniciar outra operação. Não inferir ausência de ticket pela expiração do token. `FINISHED` na avaliação e saída 1 do Gradle são compatíveis com asserções FAIL; não significam processo ainda em andamento.
+
 ### 8.2. Conferência manual recomendada
 
 O navegador não substitui os testes de API: ocultar um botão não impede chamadas diretas. Para revisão pelo responsável, o caminho mais seguro é rodar os grupos acima e abrir `backend/build/reports/tests/securityAssessmentTest/index.html`, acompanhando estes casos:
@@ -641,9 +808,9 @@ Essas conferências pelo responsável ainda **não foram realizadas** e não sã
 
 ## 9. Limitações e riscos residuais
 
-1. **Camadas e provedores:** as capturas locais de 10–12/11 usaram mocks e não comprovam contratos ou efeitos reais de terceiros. A seção 3.6 separa as chamadas funcionais reais à BlindPay Development de 13/11. Avenia real, AWS e chatbot não foram exercitados nessa etapa externa. Não houve recebimento de webhook real, túnel ou alteração de dashboard.
+1. **Camadas e provedores:** as capturas locais de 10–12/11 usaram mocks e não comprovam contratos ou efeitos reais de terceiros. A seção 3.6 separa as chamadas funcionais reais à BlindPay Development de 13/11. Avenia real não foi exercitada na etapa BlindPay, mas foi avaliada separadamente na seção 3.8. AWS e chatbot não foram exercitados nessas etapas externas. Não houve recebimento de webhook real, túnel ou alteração de dashboard.
 2. **Concorrência:** plano local executado: cinco confirmações de oferta, cinco entregas do mesmo webhook, confirmação/recotação versus conciliação, consumo TOTP intercalado e expiração entre checagem/submissão. Não é prova formal de liquidação única distribuída, nem execução em múltiplas Lambdas. Na corrida de payout a evidência é a chave estável, não a alegação de uma única chamada HTTP ao provedor.
-3. **Recotação:** a captura local até COMPLETED usa payout simulado. A complementação BlindPay identifica separadamente expiração provocada no banco efêmero, recotação real e eventual aceitação explícita, conforme os estados observados. Não se afirma liquidação em produção nem recotação real da Avenia.
+3. **Recotação:** a captura local até COMPLETED usa payout simulado. A complementação BlindPay identifica separadamente expiração provocada no banco efêmero, recotação real e eventual aceitação explícita, conforme os estados observados. Na seção 3.8, a confirmação Avenia gerou cotação fresca e ticket de sandbox real; não se induziu preço pior, expiração ou timeout no provedor. Não se afirma liquidação em produção.
 4. **Valores/moedas/tarifas:** a matriz TC-FIN-13–19 cobre casos representativos, fronteiras de centavos/long, sinal de tarifas e persistência fiat/cripto. Os defeitos encontrados são FAIL, não ausência de teste. Novos ativos/regras de arredondamento ou limites de negócio demandam manutenção da matriz; não se afirma cobertura de todas as combinações matematicamente possíveis.
 5. **Imutabilidade:** COMPLETED/FAILED/REFUNDED foram exercitados em confirmação, recotação, start e reconciliação com comparação integral do registro de execução. Isso não é uma proteção contra escrita SQL direta por um administrador de banco nem comprova comportamento interno de terceiros.
 6. **Recuperação/sessão:** recuperação, logout no servidor e troca de senha via endpoint não existem no HEAD. Limpeza do cliente é coberta pelo Vitest; a alteração de senha foi simulada no banco isolado e demonstrou sessão antiga ainda aceita. A lacuna de revogação está registrada em SEC85-06.
@@ -654,6 +821,17 @@ Essas conferências pelo responsável ainda **não foram realizadas** e não sã
 
 Os itens parciais das tabelas não recebem automaticamente CWE: ausência de funcionalidade, cobertura incompleta e limitação de ambiente não demonstram por si só uma fraqueza explorável. As fragilidades confirmadas têm classificação, evidência e reprodução na seção 6.
 
+### 9.1. Pendências e limites da complementação Avenia
+
+- **Webhooks reais:** recebimento, assinatura, falsificação, replay, duplicidade e ordem não executados; polling não os substitui.
+- **Falha financeira/cancelamento:** não foram criados cenários financeiros terminais FAILED/CANCELED. O simulador documentado de bloqueio bancário exige payout PIX, fora da rota BRL/PIX → carteira do adapter atual. Não foi forçada uma corrida de cancelamento contra PIX automaticamente pago.
+- **Resultado incerto e TOCTOU:** não houve timeout ou resposta perdida, nem falhas/tempo manipulados no provedor. Permanecem testes defensivos locais; esta etapa não prova recuperação real de um ticket incerto.
+- **Validade e tarifas:** tokens frescos foram aceitos e a confirmação recotou pelo caminho de produção; não se induziu expiração/reuso externo nem preço pior no sandbox. Tarifas reais foram observadas com suas moedas; não se afirma validação universal de toda tarifa/ativo/combinação.
+- **Onboarding:** não houve envio de documentos, KYC/KYB integral ou aprovação artificial. O sandbox liberou BRL na subconta nova; o vínculo local permaneceu PENDING. Isso não demonstra elegibilidade institucional em produção.
+- **Fluxos excluídos:** cadastro/convites de operadores, BlindPay real, AWS, chatbot e produção não foram reavaliados.
+
+Assim, a integração de saída Avenia está demonstrada nas rotas acima e dois achados locais ganharam reprodução com provedor real. O DoD integral da #85 continua parcial, em especial quanto a eventos externos e demais requisitos não demonstrados.
+
 ## 10. Checklist do DoD da #85
 
 As caixas distinguem os casos do plano local das exigências integrais da issue. A revisão da seção 3.7 corrige testes e rastreabilidade: referências genéricas de componente e inventário do perfil padrão não comprovam todos os contratos/autorização por endpoint. A matriz nova admite PARCIAL e NAO_AVALIADO e separa cobertura de resultado do controle. Um FAIL executado não é um teste pendente. A cobertura externa permanece parcial, mesmo após a etapa BlindPay.
@@ -663,8 +841,8 @@ As caixas distinguem os casos do plano local das exigências integrais da issue.
 - [x] **Fluxos existentes e controles contra abuso avaliados com dados sintéticos.** R04/R05/R08/R13: cadastro, empresas, representantes, compliance, beneficiários, cotações, transferências, repetição, validação, paginação, pool/fila e uploads; ausência de limiter local registrada em OBS85-03. Convite/cadastro de operadores ainda indisponível, fora da execução até sua entrega.
 - [x] **Integridade financeira avaliada pela matriz finita.** R06/R07: valores negativos/zero/precisão/overflow/moedas/rotas/tarifas, validade/margem, oferta selecionada, empresa-beneficiário-cotação-execução, propriedades protegidas e persistência. Perda de precisão/tarifa negativa permanecem FAIL. Os testes não exigem explorar infinitas combinações monetárias.
 - [x] **Idempotência, concorrência, TOCTOU e estados avaliados localmente.** R08/R09/R10: confirmação concorrente, webhook duplicado, recotação versus conciliação, TOTP e relógio controlado; regressão da máquina de estados, falha/reembolso/retries e imutabilidade terminal. SEC85-09 registra a falha encontrada; liquidação distribuída real não foi simulada como prova de produção.
-- [ ] **Integrações e webhooks — cobertura externa parcial.** R11/R12/R14 têm a cobertura local documentada e a complementação BlindPay Development da seção 3.6. Avenia real e recebimento de webhooks externos continuam não executados. Testes defensivos de assinatura, duplicidade, erros, timeouts e redirects não foram confundidos com chamadas funcionais bem-sucedidas. Não se implementou integração ausente apenas para marcar o checklist.
+- [ ] **Integrações e webhooks — cobertura externa parcial.** R11/R12/R14 têm a cobertura local documentada e a complementação BlindPay Development da seção 3.6. A integração de saída Avenia real foi complementada nas seções 3.8 e 5.7. Recebimento/autenticidade/replay/ordenação de webhooks externos e os demais limites da seção 9.1 continuam não demonstrados. Testes defensivos de assinatura, duplicidade, erros, timeouts e redirects não foram confundidos com chamadas funcionais bem-sucedidas. Não se implementou integração ausente apenas para marcar o checklist.
 - [x] **Resultados, evidências e limitações registrados para cada caso executado.** Seções 3–5 e arquivos JSON sanitizados; casos individuais da regressão e do diagnóstico enumerados.
 - [x] **Vulnerabilidades reproduzíveis registradas com passos seguros.** Seções 6 e 8; sem movimentação real nem exposição de segredos.
 
-A complementação local da seção 3.5 permanece como captura própria. A etapa da seção 3.6 complementa somente a BlindPay; o encerramento integral da #85 ainda depende das pendências externas e da avaliação separada dos fluxos excluídos. Não se apresentam Avenia, webhook real ou convites como testados nesta complementação. Corrigir os achados e comprovar sua remediação pertence à etapa de correção/reteste.
+A complementação local da seção 3.5 permanece como captura própria. A seção 3.6 complementa a BlindPay e as seções 3.8 e 5.7 complementam as rotas autorizadas da Avenia; o encerramento integral da #85 ainda depende das pendências externas e da avaliação separada dos fluxos excluídos. Não se apresentam webhook real ou convites como testados nesta complementação. Corrigir os achados e comprovar sua remediação pertence à etapa de correção/reteste.
