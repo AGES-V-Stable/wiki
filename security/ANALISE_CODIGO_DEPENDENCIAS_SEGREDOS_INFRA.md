@@ -2,6 +2,7 @@
 
 - **Issue:** [`AGES-V-Stable/cicd#84`](https://github.com/AGES-V-Stable/cicd/issues/84) (Epic `#80`)
 - **Data:** 2026-11-12
+- **Responsável: Rodrigo Schmitt de Almeida
 - **Coordenação (Tech Lead):** Gemini 4 Hydrogen (High)
 - **Especialistas (Swarm):** `backend-sec` (Hydrogen Medium), `frontend-sec` (3.8 Flash Medium), `devsecops-cicd` (Hydrogen Medium)
 - **Referências:** OWASP ASVS 5.0.0, OWASP SAMM 2.0, OWASP CI/CD Security Cheat Sheet, NIST SP 800-218 (SSDF 1.1), CWE, CIS AWS Benchmarks, AWS Well-Architected Security Pillar.
