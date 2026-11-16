@@ -6,18 +6,28 @@ O banco de dados da V-Stable é modelado em **PostgreSQL**, com o schema gerenci
 
 <div align="center">
 
-  <img width="2071" height="1441" alt="diagrama-vstable-v8" src="https://github.com/user-attachments/assets/1cd6d50a-2845-43c7-b5e8-68822673f5b0" />
+  <img alt="Modelo Lógico de Dados (1/2) — Identidade, Convites, KYC, Provedores e Auxiliares (V1–V20)" src="assets/database/diagrama-1-identidade-compliance.png" />
 
   <br/>
-  <em>Modelo Lógico de Dados</em>
+  <em>Modelo Lógico de Dados (1/2) — Identidade, Convites, KYC, Provedores e Auxiliares (V1–V20)</em>
 </div>
 
-
-
+<br/>
 
 <div align="center">
-<img width="1064" height="969" alt="modelo-conceitual-v8-2" src="https://github.com/user-attachments/assets/37788758-8ab9-48f0-a9c2-b33d2ff4596d" />
-<em>Modelo Conceitual</em>
+
+  <img alt="Modelo Lógico de Dados (2/2) — Beneficiários, Cotações, Transferências e Transações (V1–V20)" src="assets/database/diagrama-2-operacional-transacoes.png" />
+
+  <br/>
+  <em>Modelo Lógico de Dados (2/2) — Beneficiários, Cotações, Transferências e Transações (V1–V20)</em>
+</div>
+
+<br/>
+
+<div align="center">
+  <img width="1064" height="969" alt="modelo-conceitual-v8-2" src="https://github.com/user-attachments/assets/37788758-8ab9-48f0-a9c2-b33d2ff4596d" />
+  <br/>
+  <em>Modelo Conceitual (referência v8)</em>
 </div>
 
 ## Padrões Adotados
