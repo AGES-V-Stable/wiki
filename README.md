@@ -8,3 +8,4 @@
 - [Análise de Código, Dependências, Segredos e Infraestrutura (Issue #84)](security/ANALISE_CODIGO_DEPENDENCIAS_SEGREDOS_INFRA.md)
 - [Testes de Segurança da Aplicação e APIs (Issue #85)](security/TESTES_SEGURANCA_APLICACAO_APIS.md)
 - [Pentest Controlado e Análise de Impacto (Issue #86)](security/PENTEST_CONTROLADO_E_ANALISE_DE_IMPACTO.md)
+- [Relatório Técnico Final de Segurança — avaliação consolidada da equipe (Issue #89)](security/RELATORIO_TECNICO_FINAL_SEGURANCA.md)
