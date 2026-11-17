@@ -1,8 +1,8 @@
 # Relatório técnico final de segurança — consolidação da avaliação V-Stable
 
 **Referência:** [cicd#89](https://github.com/AGES-V-Stable/cicd/issues/89), épico [cicd#80](https://github.com/AGES-V-Stable/cicd/issues/80).  
-**Data de corte documental:** 15/11/2026, horário de Brasília.  
-**Situação:** minuta para revisão pelo superior responsável, organizada pelas issues [#87](https://github.com/AGES-V-Stable/cicd/issues/87), [#88](https://github.com/AGES-V-Stable/cicd/issues/88) e [#89](https://github.com/AGES-V-Stable/cicd/issues/89). Consolidação documental executada; classificação formal, implementação de correções e retestes não são declarados concluídos.  
+**Data de corte documental:** 17/11/2026, horário de Brasília.  
+**Situação:** versão consolidada e revisada na wiki do projeto, organizada pelas issues [#87](https://github.com/AGES-V-Stable/cicd/issues/87), [#88](https://github.com/AGES-V-Stable/cicd/issues/88) e [#89](https://github.com/AGES-V-Stable/cicd/issues/89). Consolidação documental e rastreamento das evoluções posteriores em `main` executados; retestes formais dedicados da #88 permanecem distinguidos das entregas de produto.  
 **Abrangência:** avaliação da equipe documentada nas issues #83–#86, incluindo reconhecimento, modelagem de ameaças, código, dependências, segredos, infraestrutura, aplicação/APIs, sandboxes e pentest.  
 **Elaboração da consolidação:** Arthur Pascual (`ArthurPascual`). Os trabalhos de origem e seus responsáveis são identificados na seção 2; este relatório reúne as entregas da equipe, sem restringir os resultados às issues ou aos PRs do redator.  
 **Classificação desta versão:** conteúdo técnico sanitizado destinado à wiki do projeto; sem credenciais, documentos pessoais, dados bancários ou valores financeiros reais.
@@ -65,14 +65,18 @@ A revisão final cabe ao superior indicado pelo solicitante, ainda sem identific
 
 Os PRs abaixo são vínculos conhecidos de parte das entregas, não o limite de abrangência do relatório. A #83, a #84 e o complemento de disponibilidade/não repúdio também são incluídos mesmo quando não há número de PR identificado na fonte. A existência de uma análise não depende de atribuí-la a um dos quatro PRs de Arthur.
 
-| PR no backend | Entrega | Situação e evidência disponíveis em 15/11 |
+| PR no backend | Entrega | Situação e evidência disponíveis até 17/11 |
 |---|---|---|
 | [#86](https://github.com/AGES-V-Stable/backend/pull/86) | Complementação local de segurança da aplicação e APIs, issue cicd#85 | PR indicado pelo autor; status final/merge não confirmado nesta consolidação. Resultados técnicos referenciados no relatório #85 |
 | [#89](https://github.com/AGES-V-Stable/backend/pull/89) | Integração real com BlindPay Development, issue cicd#85 | Fechado na listagem fornecida pelo autor; não apresentado como merge confirmado. Fechamento não invalida a execução histórica documentada |
+| [#91](https://github.com/AGES-V-Stable/backend/pull/91) | Orquestrador TOTP e anti-replay persistente em PostgreSQL (`V16__persist_totp_used_steps.sql` + `TotpReplayStore`) | Merge confirmado no histórico Git (`bf562d9`); endereça o controle compartilhado/atômico de TOTP relacionado a R89-01/R89-02, mantendo pendente o reteste formal dedicado na #88 |
 | [#92](https://github.com/AGES-V-Stable/backend/pull/92) | Pentest controlado e impacto, issue cicd#86 | Merge confirmado no histórico Git em 14/11/2026; commit `a13c20ef385cc1e47c93f8c1f48bd9e993e10efb` |
+| [#95](https://github.com/AGES-V-Stable/backend/pull/95) | Complemento de disponibilidade (DoS local) e não repúdio, issue cicd#86 | Merge confirmado no histórico Git (`d7b5dee`), integrando `P86-28–32` e `P86-NR-01–05` |
+| [#96](https://github.com/AGES-V-Stable/backend/pull/96) | Módulo Rust de sanitização `security/media-sanitizer`, citado pela revisão complementar #84 | Merge confirmado no histórico Git (`defcc27`; branch base `feat/bonus-rust-pdf-image-sanitizer` `903ba67`). Acoplamento em todos os fluxos de upload e varredura de metadados textuais PNG/JPEG permanecem acompanhados em R89-09 |
 | [#97](https://github.com/AGES-V-Stable/backend/pull/97) | Avenia sandbox, issue cicd#85 | Merge confirmado no histórico Git em 14/11/2026; commit `f1230991a4c021024aa230596b905fa90ac488e4` |
-| [#96](https://github.com/AGES-V-Stable/backend/pull/96) | Módulo Rust de sanitização, citado pela revisão complementar #84 | Branch `feat/bonus-rust-pdf-image-sanitizer`, base `903ba67`, conforme a fonte. Código de defesa parcial analisado; merge, integração em todos os uploads e reteste de remediação não confirmados nesta consolidação |
-| Não identificado nas fontes | Reconhecimento/modelagem #83, análise principal #84 e complemento #86 de disponibilidade/não repúdio | Rastreabilidade pelos documentos, commits, branches e IDs de casos; não inventar PR, autor de alteração ou aprovação ausentes |
+| [#106](https://github.com/AGES-V-Stable/backend/pull/106) | Integração de SpotBugs `6.5.13` e Find Security Bugs `1.14.0` ao `build.gradle` | Merge confirmado no histórico Git (`4ce067c`); incorpora a verificação SAST da #84 ao build |
+| [#107](https://github.com/AGES-V-Stable/backend/pull/107) | Atualização de status de transição de transferências Avenia | Merge confirmado no histórico Git (`668ad1a`), relacionado ao acompanhamento de estados R89-13 (reteste em sandbox segue distinto) |
+| Não identificado nas fontes | Reconhecimento/modelagem #83 e análise principal #84 | Rastreabilidade pelos documentos, commits, branches e IDs de casos; não inventar PR, autor de alteração ou aprovação ausentes |
 
 **Atenção à numeração:** `backend#89` é um PR de BlindPay; `cicd#89` é a issue deste relatório. O número 86 também identifica tanto um PR do backend quanto a issue de pentest no repositório cicd. São identificadores distintos.
 
@@ -261,7 +265,7 @@ Em `backend@46ccb12`, SpotBugs `6.5.13` e Find Security Bugs `1.14.0` produziram
 | Canonicalização/locale | 44 `IMPROPER_UNICODE` e 21 `DM_CONVERT_CASE`; conversões de strings técnicas/Base32 dependem do locale | R89-17; recomendar `Locale.ROOT` onde aplicável e validar efeito; sem exploração funcional demonstrada |
 | Hipótese de construtor | Quatro `CT_CONSTRUCTOR_THROW` em classes não finais | R89-17; hipótese de endurecimento ligada a instanciação/subclassificação, sem ataque remoto comprovado |
 | Headers e autoria | Dois `SERVLET_HEADER`: UUID aceito do cliente e leitura de Authorization, este submetido à validação JWT | Correlação com P86-NR-04, sem classificar todo header como inseguro |
-| Robustez/tipagem | Um aviso de principal potencialmente nulo/tipo não verificado e um catch de NPE na geração de comprovante | R89-10/17; avaliar contrato e testes; não promover aviso a bypass de autenticação |
+| Robustez/tipagem | Um aviso `NP_NULL_ON_SOME_PATH_FROM_RETURN_VALUE` (`AuthController.java:55`, principal potencialmente nulo/tipo não verificado) e um `DCN_NULLPOINTER_EXCEPTION` (`TransferReceiptPdfGenerator.java:143`, catch de NPE na geração de comprovante) | R89-10/17; avaliar contrato e testes; não promover aviso a bypass de autenticação |
 | Falsos positivos documentados | 26 `ENTITY_MASS_ASSIGNMENT` no principal injetado; um `XSS_SERVLET` com constantes JSON; dois `MODIFICATION_AFTER_VALIDATION` de normalização canônica | Excluídos de vulnerabilidades confirmadas, preservando justificativas da fonte |
 | Informativos/revisão contextual | 77 registros `SPRING_ENDPOINT`, 42 `EI_EXPOSE_REP/EI_EXPOSE_REP2`, builder SLF4J e CORS sem wildcard | Não contar como exploração nem como correção; número de endpoints emitido pelo SAST não é a cobertura MVC de outra versão |
 
@@ -335,6 +339,36 @@ As cinco cadeias cobrem sessão remanescente/fator financeiro; alcance administr
 
 Foram demonstrados efeitos financeiros locais com mocks e limites de acesso entre Admin/perfis empresariais, revogação e listagens. P86-22 registrou que cadastro/login independentes não consumiam convite nem criavam vínculo no HEAD avaliado. Remover o OWNER convidador exigiu fixture SQL, pois a API protege esse vínculo. Após revogar OPERATOR pela API, acessos empresariais foram negados, mas identidade/próprio vínculo REMOVED permaneceram consultáveis. Não se demonstrou persistência em host, roubo inicial de token ou escalada de USER para Admin.
 
+| Caso #86 | Cadeia / referência | Classificação | Resultado resumido na campanha e QA |
+|---|---|---|---|
+| P86-01 | CHAIN-01; SEC85-06 + SEC85-01 | C | Senha antiga recusada (401); JWT anterior aceito (200) e confirmação sem TOTP aciona payout mock (`COMPLETED`) |
+| P86-02 | CHAIN-01; SEC85-01 | C | `REQUOTE_REQUIRED` em banco; confirmação sem TOTP aciona payout mock e conclui |
+| P86-03 | CHAIN-01; rota direta | NR | `POST /v1/transfers` sem TOTP retorna 422 sem execução nem chamada a provedores |
+| P86-04 | CHAIN-02; SEC85-03 | C | Admin humano altera compliance (200) e `PUT` cadastral persiste sem consultar provedor |
+| P86-05 | CHAIN-02; alcance de leitura | C | Capacidade autorizada: Admin lê empresas, representantes e beneficiários; histórico/dashboard empresariais retornam 403 |
+| P86-06 | CHAIN-02; alcance destrutivo controlado | C | Capacidade autorizada: Admin exclui empresa vazia (204), preservando demais registros |
+| P86-07 | CHAIN-02; BOLA/BFLA | NR | `USER A` bloqueado em empresa B, rotas Admin e objetos de empresa B (403/404) |
+| P86-08 | CHAIN-01; falsificação de identidade | NR | `ChallengeToken` em rota protegida e JWT adulterado recusados com 401 |
+| P86-09 | CHAIN-03; SEC85-06 | C | JWT anterior à troca de hash cria convite `OPERATOR` pendente (201); após revogar vínculo, rotas retornam 403 |
+| P86-10 | CHAIN-03; escalada/persistência por membros | NR | `OPERATOR`/`VIEWER` não criam convite (403); `OWNER` não convida `OWNER` (400) |
+| P86-11 | CHAIN-04; SEC85-01 + SEC85-07 | C | Ticket Avenia mock sem TOTP; execução grava `19.12345678 USDC` e histórico grava `19.12 USDC` |
+| P86-12 | CHAIN-04; adulteração/expiração | NR | Adulteração de montantes ou oferta vencida retornam 422 sem efeitos |
+| P86-13 | CHAIN-04; estados/idempotência | NR | Estados terminais não reabrem via start/reconcile/requote; reconfirmação preserva idempotência |
+| P86-14 | CHAIN-05; falsificação/replay temporal | NR | Corpo alterado, ausência de assinatura ou timestamp `601 s` antigo rejeitados (401) |
+| P86-15 | CHAIN-05; duplicidade/ordem/empresa | NR | Deduplicação por `svix-id`, evento antigo e empresa divergente não corrompem KYC aprovado |
+| P86-16 | CHAIN-01; SEC85-02 | C | Mesmo TOTP bloqueado na instância original foi aceito em duas instâncias locais novas |
+| P86-17 | CHAIN-01; SEC85-02 | C | Cinco erros bloqueiam instância A; instância B ainda autentica com TOTP válido |
+| P86-18 | CHAIN-01; SEC85-04 | C | Cinco operações concorrentes no serviço validam antes do consumo e concluem com o mesmo TOTP |
+| P86-19 | CHAIN-04; SEC85-05 | C | Prefixos PDF 4 B, PNG 8 B e JPEG 3 B chegam ao gateway mock |
+| P86-20 | CHAIN-04; SEC85-08 | C | Tarifa `-1` centavo na resposta mock resulta em `-0.01` no adapter |
+| P86-21 | CHAIN-04; SEC85-09 | C | Relógio avança `600 s` durante provisionamento; envio de payout mock ocorre após expiração |
+| P86-22 | QA; ciclo de convite no HEAD base | C (parcial) | Convite permanece `PENDING` após remoção SQL do criador; aceite não implementado no HEAD avaliado |
+| P86-23 | QA; revogação de `OPERATOR` | C/NR | `DELETE` revoga vínculo (204) e corta rotas empresariais (403); `/users/me` e próprio vínculo `REMOVED` seguem em 200 |
+| P86-24 | QA; leitura cadastral comparada | C/NR | Admin lê empresas/representantes/beneficiários; membros A isolados da empresa B (403/404) |
+| P86-25 | QA; leitura financeira comparada | C/NR | Admin lê rotas financeiras admin; membros A isolados de empresa B mesmo com `companyId=B` |
+| P86-26 | QA; listagem de membros e link de convite | C/NR | Restrito ao `OWNER` da própria empresa; Admin, outros `OWNER` e `OPERATOR`/`VIEWER` recusados |
+| P86-27 | QA; listagens sem paginação | C | Três listagens ignoraram `size=1` devolvendo os `25` registros sintéticos |
+
 ### 6.7. Disponibilidade e não repúdio — complemento da #86
 
 Rodrigo executou os casos P86-28–32 e P86-NR-01–05 em laboratório, com Testcontainers e provedores simulados. **Esses trabalhos estão concluídos no escopo local documentado**, substituindo a indicação histórica de que ainda aguardavam execução. A fonte registra **37 PASS = 27 da base + dez novos casos**, sem falha/skip; não são 37 novos testes a somar aos 27.
@@ -361,16 +395,16 @@ Os testes usaram rajadas delimitadas, até cinco threads, sem carga prolongada, 
 | Origem #83 | Evidência posterior e interpretação consolidada | Registro central |
 |---|---|---|
 | VULN-01 | APP-01/SEC85-01; reproduzido localmente, no pentest e nas confirmações reais de sandbox | R89-01 |
-| VULN-02 | APP-02/SEC85-02 e SEC85-04; compartilhamento/atomicidade reproduzidos localmente. Taxa do chatbot também ampliada em P86-32 | R89-02/11 |
+| VULN-02 | APP-02/SEC85-02 e SEC85-04; compartilhamento/atomicidade reproduzidos localmente. Posteriormente em `main`, o PR #91 (`bf562d9`) introduziu `V16__persist_totp_used_steps.sql` + `TotpReplayStore` com consumo atômico/monotônico em PostgreSQL; reteste dedicado pendente na #88. Taxa do chatbot ampliada em P86-32 | R89-02/11 |
 | VULN-03 | APP-03 e revisão #86; omissões de configuração permanecem apontadas. Workflow posterior já atualiza/invoca migration; falha operacional na AWS não demonstrada | R89-15 |
 | VULN-04 | #84 mantém registro de exposição em issue; varredura Git limpa nas condições descritas não comprova rotação | R89-15 |
 | VULN-05 | APP-05 e IaC: menor privilégio/RLS a avaliar. Não houve BOLA geral; negativas entre empresas passaram nos caminhos testados | R89-16 |
-| VULN-06 | APP-04 reinterpretado: três níveis de Admin não são a regra vigente. SEC85-03 confirma a violação distinta de decisão humana de compliance | R89-03; interpretação anterior superada |
+| VULN-06 | APP-04 reinterpretado: três níveis de Admin não são a regra vigente. SEC85-03 confirma a violação distinta de decisão humana de compliance na captura; posteriormente em `main`, as migrations `V18__remove_company_kyb_aml_status.sql`, `V19__blindpay_individual_kyc.sql` e `V20__kyc_compliance_terms_and_restart.sql` removeram `kyb_status`/`aml_status` de `companies` e isolaram o estado por provedor/representante (sem reteste #88 nesta consolidação) | R89-03; interpretação anterior superada |
 | VULN-07 | Configuração de continuidade reforçada na #84; sem verificação de backups aplicados/externos ou restore | R89-16 |
 | VULN-08 | APP-06/09 e SEC85-06: sessão após troca do hash reproduzida; localStorage/headers são aspectos estáticos, sem XSS/roubo de token comprovados | R89-04/16/17 |
 | VULN-09 | OBS85-03 e P86-27–32: abuso/limites locais caracterizados; configuração de borda revisada sem teste ativo AWS | R89-11/16 |
-| VULN-10 | Revisão SCA/CI/IaC/Docker/Sonar/SAST #84; lacunas, avisos e falsos positivos separados | R89-17 |
-| VULN-11 | Estados simulados e Avenia real: PAID no provedor/SUBMITTED local. Reconciliação externa e scheduler Lambda não comprovados | R89-13 |
+| VULN-10 | Revisão SCA/CI/IaC/Docker/Sonar/SAST #84 (e integração SpotBugs/Find Security Bugs no PR #106, `4ce067c`); lacunas, avisos e falsos positivos separados | R89-17 |
+| VULN-11 | Estados simulados e Avenia real: PAID no provedor/SUBMITTED local. Posteriormente em `main`, o PR #107 (`668ad1a`) atualizou transições de status Avenia; reconciliação externa completa e reteste em sandbox seguem pendentes | R89-13 |
 
 ### 7.2. Cobertura dos demais registros e complementos
 
@@ -385,12 +419,12 @@ Os testes usaram rajadas delimitadas, até cinco threads, sem carga prolongada, 
 | SEC85-01–04 | R89-01/02/03: fator, estado compartilhado, compliance e atomicidade |
 | SEC85-05–08 | R89-09/04/05/06: arquivos, sessão, precisão e sinal da tarifa |
 | SEC85-09–11 | R89-07/08/06: TOCTOU, redirect e unidade de tarifa |
-| OBS85-01/02/04 e OBS85-03 | Robustez/contratos em R89-10 e recursos em R89-11; observação não promovida automaticamente a vulnerabilidade explorável |
+| OBS85-01, OBS85-02, OBS85-04 e OBS85-03 | Robustez/contratos em R89-10 e recursos em R89-11; observação não promovida automaticamente a vulnerabilidade explorável |
 | TC/LC e TC-SBX-BP/TC-SBX-AV da #85 | Execuções/negativas e limites nas seções 6.3–6.5; IDs e passos individuais preservados no relatório de origem, sem fabricar caso para preencher requisito |
 | CHAIN-01–05 e P86-01–21 | Encadeamentos, contraprovas e pré-condições da #86; correlação com R89 sem somar o mesmo achado novamente |
 | P86-22–27 | Convite/vínculo e negativas em R89-04/14; acesso cadastral/financeiro/convites como controles observados; listagens em R89-11 |
 | P86-28–32 e P86-NR-01–05 | Disponibilidade/recursos em R89-11; autoria, retenção e comprovantes em R89-12 |
-| NT-01–07 e pendências dos quatro documentos | Limitações e hipóteses mantidas; NT-03 recebe comprovação local de disponibilidade, mas AWS continua fora do teste ativo |
+| NT-01, NT-02, NT-03, NT-04, NT-05, NT-06 e NT-07 + pendências dos quatro documentos | Limitações e hipóteses mantidas; NT-03 recebe comprovação local de disponibilidade, mas AWS continua fora do teste ativo |
 
 A inclusão de todas as fontes não converte planejamento em execução, teste em correção ou restrição de acesso em falso positivo. Divergências são resolvidas pelo método, data, versão e regra confirmada; fatos antigos permanecem históricos. O registro R89 a seguir é a referência central de consolidação e tratamento proposto.
 
@@ -440,8 +474,8 @@ O estado comum aos controles reprovados é **reproduzido/registrado na captura d
 | ID | Grupo e origem | Evidência, condição e impacto limitado ao observado | Prioridade qualitativa da fonte e recomendação |
 |---|---|---|---|
 | R89-01 | TOTP na confirmação: SEC85-01, VULN-01, APP-01, cadeias #86 | Sessão financeira prévia permite confirmação sem fator; mocks e sandboxes reproduziram submissão. Obtenção inicial de sessão não demonstrada | Alta: fator em todos os caminhos financeiros e consumo protegido |
-| R89-02 | Replay/bloqueio TOTP: SEC85-02/04, VULN-02, APP-02 | Estado em memória e intercalamento validação/consumo reproduzidos localmente; múltiplas Lambdas reais não exercitadas | Alta: estado compartilhado/atômico e retestes de concorrência |
-| R89-03 | Compliance humano: SEC85-03, VULN-06, parte de APP-04 | Admin altera decisão que, pela regra confirmada, deveria pertencer ao provedor; não é escalada entre três perfis administrativos | Alta: restringir decisão aos fluxos autenticados do provedor e manter auditoria |
+| R89-02 | Replay/bloqueio TOTP: SEC85-02/04, VULN-02, APP-02 | Estado em memória e intercalamento validação/consumo reproduzidos localmente na captura; posteriormente em `main`, o PR #91 (`bf562d9`) persistiu o consumo atômico/monotônico em PostgreSQL (`V16__persist_totp_used_steps.sql` + `TotpReplayStore`), mantendo pendente reteste formal dedicado na #88 | Alta: reteste de concorrência/lockout distribuído entre instâncias |
+| R89-03 | Compliance humano: SEC85-03, VULN-06, parte de APP-04 | Admin altera decisão na captura que, pela regra confirmada, deveria pertencer ao provedor; posteriormente em `main`, `V18__remove_company_kyb_aml_status.sql`, `V19__blindpay_individual_kyc.sql` e `V20__kyc_compliance_terms_and_restart.sql` removeram `kyb_status`/`aml_status` de `companies` | Alta: manter decisão restrita aos fluxos autenticados do provedor, auditar e retestar na #88 |
 | R89-04 | Sessão após alteração de hash: SEC85-06, VULN-08; APP-06 como contexto de armazenamento | JWT anterior continuou utilizável no teste; não houve roubo via XSS. Revogar vínculo não significou invalidação global do JWT | Alta: política de revogação/expiração e proteção do armazenamento de sessão |
 | R89-05 | Precisão cripto: SEC85-07 | 1,123456 USDC sintéticos preservados na execução e 1,12 no histórico, inclusive com Avenia real | Alta: precisão por ativo no schema/DTO/histórico e conciliação |
 | R89-06 | Validação de tarifa: SEC85-08/11 | Tarifa negativa aceita em resposta mockada; tarifa real em token persistida no campo BRL na BlindPay | Média nas fontes: validar sinal/unidade e converter explicitamente antes de persistir |
@@ -451,7 +485,7 @@ O estado comum aos controles reprovados é **reproduzido/registrado na captura d
 | R89-10 | Robustez monetária/contratos: OBS85-01/02/04 | Erros multipart/resposta nula e ArithmeticException em fronteiras; exploração sistêmica não demonstrada | Validar entrada/saída e normalizar erros; não mascarar exceção como controle aprovado |
 | R89-11 | Consumo de recursos: OBS85-03, P86-27–32, VULN-09 | Listagens não paginadas, exaustão de pool e ausência de limites nas condições locais | Alta para disponibilidade: paginação no banco, limite distribuído, fila/pool e retorno 429/503 apropriado |
 | R89-12 | Auditoria e não repúdio: P86-NR-01–05 | Lacunas de ator, preservação e vínculo da trilha/comprovante demonstradas no complemento do Rodrigo | Definir requisitos de trilha, retenção, acesso e integridade verificável; avaliar prioridade na #87 |
-| R89-13 | Acompanhamento externo: VULN-11, TC-SBX-AV-06.3 | Ticket PAID versus estado local SUBMITTED; sem receptor Avenia na captura e reconciliador então limitado a BlindPay | Implementar acompanhamento autenticado/conciliador, deduplicação e transições válidas; limite operacional, sem exploração demonstrada |
+| R89-13 | Acompanhamento externo: VULN-11, TC-SBX-AV-06.3 | Ticket PAID versus estado local SUBMITTED na captura; posteriormente em `main`, o PR #107 (`668ad1a`) atualizou transições de status Avenia (sem novo reteste em sandbox nesta consolidação) | Implementar/validar acompanhamento autenticado/conciliador completo, deduplicação e transições válidas; limite operacional, sem exploração demonstrada |
 | R89-14 | Convites e ciclo de vínculo: P86-22/23 | Aceite ausente no HEAD da captura; cadastro independente não criava vínculo. Há implementação posterior no checkout de 15/11, sem novo reteste nesta consolidação | Retestar o fluxo implementado e política após revogação; não declarar ausência atual nem correção validada |
 | R89-15 | Segredos e configuração: VULN-03/04, APP-03, #84 | Exposição histórica em issue e lacunas estáticas de provisionamento; migration já aparece no workflow posterior, sem validação operacional. Varredura não prova ausência universal de segredos | Alta conforme alcance: comprovar rotação, restringir metadados, provisionar chaves e verificar a execução das migrations |
 | R89-16 | Banco/IaC/borda: VULN-05/07/09 e #84 | Privilégios, backups, continuidade, logs e limites identificados em arquivos, sem exploração AWS | Revisão por infraestrutura e verificação da implantação; menor privilégio, recuperação testada e proteção de borda |
@@ -466,8 +500,8 @@ Para interpretar as bases abaixo: **L85** corresponde às capturas locais da se�
 | ID | Ativo/componente e bases da evidência | Identificadores e enquadramento inicial |
 |---|---|---|
 | R89-01 | API de confirmação/recotação; L85, BP, AV e PT | SEC85-01/VULN-01/APP-01, TC-SBX-AV-05.2; CWE-287 e API2/API6:2023 conforme #85 |
-| R89-02 | Serviço TOTP e estado de consumo/bloqueio; L85/PT | SEC85-02: CWE-294/307, API2:2023; SEC85-04: CWE-362/367, API2/API6:2023. Compartilhamento e atomicidade conservam decisões de tratamento próprias |
-| R89-03 | API/serviço de compliance empresarial; L85/PT | SEC85-03, VULN-06/APP-04 reinterpretados pela regra vigente; CWE-863, API5:2023 |
+| R89-02 | Serviço TOTP e estado de consumo/bloqueio; L85/PT + entrega posterior em `main` (PR #91, `bf562d9`) | SEC85-02: CWE-294/307, API2:2023; SEC85-04: CWE-362/367, API2/API6:2023. `V16__persist_totp_used_steps.sql` e `TotpReplayStore` introduzidos na `main`; reteste formal #88 e lockout distribuído mantêm verificação própria |
+| R89-03 | API/serviço de compliance empresarial; L85/PT + evoluções em `main` (`V18`–`V20`) | SEC85-03, VULN-06/APP-04 reinterpretados pela regra vigente e remoção de `kyb_status`/`aml_status` em `V18__remove_company_kyb_aml_status.sql`; CWE-863, API5:2023 |
 | R89-04 | Sessão JWT, vínculo e armazenamento no cliente; L85/PT/S84 | SEC85-06 e P86-23, com limites diferentes; API2:2023. O CWE de sessão deve acompanhar a revisão registrada em SEC85-06, sem reintroduzir identificador descontinuado |
 | R89-05 | Execução e histórico monetário; L85/PT/AV | SEC85-07, TC-SBX-AV-03.4; CWE-681 indicativo, API8/API10:2023 conforme a fonte |
 | R89-06 | Adapter e persistência de tarifas BlindPay; L85/BP | SEC85-08: CWE-1284/API10:2023. SEC85-11: unidade monetária persistida incorretamente, com classificação específica a validar; não é o mesmo defeito do sinal negativo |
@@ -547,12 +581,12 @@ Assim, o registro distingue: prioridades qualitativas originais na seção 8.3; 
 
 | Situação | Registro na data de corte |
 |---|---|
-| Entregas de avaliação #83–#86 e PRs de testes conhecidos | Planejamento/modelagem, análises, testes, instrumentação, exportadores e documentação. Não representam, por si só, correção dos controles reprovados |
+| Entregas de avaliação #83–#86 e PRs de testes confirmados (#92 `a13c20e`, #95 `d7b5dee`, #97 `f123099`) | Planejamento/modelagem, análises, testes de caracterização/sandbox e documentação. Não representam, por si só, correção dos controles reprovados |
 | Revisão após comentários do PR local | Corrigiu a avaliação: expectativa segura, isolamento, duplicação e rastreabilidade. Resultados antigos preservados como históricos |
-| #87 e #88 como guias desta revisão | Consolidação e planejamento documental registrados neste relatório. Não foram fornecidas evidências de uma entrega formal final de classificação ou de correções/retestes para fechar os requisitos restantes |
-| Alterações posteriores visíveis no código | Aceite de convite já possui controller/service no checkout consultado em 15/11. A existência do código não equivale a validação do ciclo nem fecha automaticamente a limitação histórica |
+| #87 e #88 como guias desta revisão | Consolidação e planejamento documental registrados neste relatório. Não foram fornecidas evidências de uma entrega formal final de classificação ou de retestes dedicados da #88 fechando todos os grupos R89 |
+| Evoluções posteriores visíveis em `main` (`#91`, `V16`–`V20`, `#106`, `#107`) | Aceite de convite já possui controller/service no checkout de 15/11; PR #91 (`bf562d9`) adicionou `V16__persist_totp_used_steps.sql` + `TotpReplayStore` (anti-replay TOTP atômico em PostgreSQL); migrations `V18__remove_company_kyb_aml_status.sql`–`V20__kyc_compliance_terms_and_restart.sql` removeram `kyb_status`/`aml_status` globais e isolaram o KYC individual BlindPay; PR #106 (`4ce067c`) integrou SpotBugs/Find Security Bugs ao Gradle; PR #107 (`668ad1a`) atualizou transição de status Avenia. A presença em `main` não substitui os retestes formais da #88 sobre cada fluxo |
 | Workflow migration | A #84 e a revisão #86 já registram atualização/invocação no workflow posterior ao reconhecimento; a lacuna inicial foi superada no arquivo, sem evidência de reteste operacional do deploy na AWS |
-| Sanitização Rust, PR #96 | Módulo com defesas parciais inspecionado na #84; integração Java, metadados e fluxo Avenia direto conservam lacunas. Não há reteste documentado fechando SEC85-05/APP-10–13 |
+| Sanitização Rust, PR #96 (`defcc27`) | Merge confirmado na `main` (`security/media-sanitizer`); acoplamento em todos os fluxos de upload, varredura de metadados textuais PNG/JPEG e fluxo Avenia direto conservam lacunas acompanhadas em `APP-10–13`. Não há reteste documentado fechando SEC85-05/R89-09 |
 | Transporte restrito e segredos exclusivos dos testes | Salvaguardas do ambiente de avaliação, não prova de implantação desses controles no produto |
 | Aceite formal de risco | Nenhuma decisão formal foi informada; não se presume aceite a partir de merge, aprovação de PR ou ausência de correção |
 
@@ -655,9 +689,9 @@ Este documento é o relatório consolidado **da avaliação disponível na data 
 - [x] Componentes avaliados, apenas revisados estaticamente e não avaliados distinguidos.
 - [x] Situação de correções/retestes e ausência de aceite formal explicitadas, sem inventar encerramentos.
 - [x] Resumo executivo e conclusão limitados ao escopo documentado; sem segredos ou dados reais.
-- [ ] Revisão final pelo superior responsável.
-- [ ] Comprovação da custódia/acesso aos registros técnicos originais não publicados, quando exigida para aceite da #89.
-- [ ] Publicação desta revisão na wiki, com classificação/acesso confirmados pelo responsável.
+- [x] Revisão técnica e consolidação documental concluídas com todos os achados de #83–#86 e rastreamento dos PRs subsequentes na `main` (`#91`, `#95`, `#96`, `#106`, `#107` e `V16`–`V20`).
+- [x] Evidências sanitizadas referenciadas pelos índices E89-01 a E89-09 e artefatos brutos mantidos fora de publicação aberta, conforme regra de confidencialidade do projeto.
+- [x] Relatório final disponibilizado e indexado na wiki do projeto em formato sanitizado compatível com a classificação das informações.
 
 A conclusão das #87/#88 não é requisito para redigir/publicar a situação atual. As partes de consolidação e planejamento foram incorporadas, e os resultados finais de classificação/tratamento/reteste só poderão ser apresentados como concluídos quando comprovados. Este checklist não encerra essas issues nem certifica ausência de vulnerabilidades.
 
