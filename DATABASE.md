@@ -25,9 +25,21 @@ O banco de dados da V-Stable é modelado em **PostgreSQL**, com o schema gerenci
 <br/>
 
 <div align="center">
-  <img width="1064" height="969" alt="modelo-conceitual-v8-2" src="https://github.com/user-attachments/assets/37788758-8ab9-48f0-a9c2-b33d2ff4596d" />
+
+  <img alt="Modelo Conceitual (1/2) — Identidade, Membros, Compliance e Provedores (V1–V20)" src="assets/database/modelo-conceitual-1-identidade-compliance.png" />
+
   <br/>
-  <em>Modelo Conceitual (referência v8)</em>
+  <em>Modelo Conceitual (1/2) — Identidade, Membros, Compliance e Provedores (V1–V20)</em>
+</div>
+
+<br/>
+
+<div align="center">
+
+  <img alt="Modelo Conceitual (2/2) — Beneficiários, Cotações, Transferências e Transações (V1–V20)" src="assets/database/modelo-conceitual-2-operacional-transacoes.png" />
+
+  <br/>
+  <em>Modelo Conceitual (2/2) — Beneficiários, Cotações, Transferências e Transações (V1–V20)</em>
 </div>
 
 ## Padrões Adotados
