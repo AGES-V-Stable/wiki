@@ -174,3 +174,37 @@ O `SupportChatClient` implementa uma cadeia de resiliência em 3 níveis que imp
 | `AI_SUPPORT_GEMINI_BASE_URL` | `ai.support.gemini-base-url` | `https://generativelanguage.googleapis.com` |
 | `AI_SUPPORT_DEEPSEEK_MODEL` | `ai.support.deepseek-model` | `deepseek-chat` |
 | `AI_SUPPORT_DEEPSEEK_BASE_URL` | `ai.support.deepseek-base-url` | `https://api.deepseek.com` |
+
+---
+
+## 6. Evidências Visuais (Aplicação em Execução)
+
+Capturas realizadas com o ambiente local atualizado (backend + frontend rodando com perfil `dev` e conta demonstrativa `V-Stable Demo`):
+
+<div align="center">
+
+  <img alt="Chatbot aberto no Dashboard com boas-vindas e sugestões rápidas" src="../assets/chatbot/chatbot-01-aberto-dashboard.png" />
+
+  <br/>
+  <em>1. Widget aberto no Dashboard exibindo mensagem de boas-vindas e perguntas frequentes (chips de acesso rápido)</em>
+</div>
+
+<br/>
+
+<div align="center">
+
+  <img alt="Resposta do chatbot com novo contexto de membros, convites e economia estimada" src="../assets/chatbot/chatbot-02-resposta-novas-features.png" />
+
+  <br/>
+  <em>2. Chatbot respondendo via provedor externo (Gemini) com o novo contexto sobre papéis empresariais (OWNER/OPERATOR/VIEWER), convites e economia estimada</em>
+</div>
+
+<br/>
+
+<div align="center">
+
+  <img alt="Rate limit com alerta e timer regressivo ao lado do botão Enviar (Heurísticas de Nielsen)" src="../assets/chatbot/chatbot-03-rate-limit-timer.png" />
+
+  <br/>
+  <em>3. Proteção de rate limit (15 req/min) exibindo alerta de erro recuperável, timer regressivo (19s) ao lado do botão Enviar desabilitado (Heurísticas de Nielsen #1, #5 e #9)</em>
+</div>
